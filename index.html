@@ -144,6 +144,64 @@
   .kind.new { background: #12372f; color: #5ee0c3; }
   .kind.fix { background: #3a2a14; color: #ffc46b; }
   .kind.better { background: #1f2a44; color: #8fb3ff; }
+  /* tabs and views */
+  .tabs { display: flex; gap: 4px; padding: 0 16px 10px; max-width: 680px; width: 100%; align-self: center; }
+  .tabs button { flex: 1; position: relative; background: var(--panel); color: var(--muted); border: 1px solid var(--line);
+    border-radius: 10px; padding: 8px 4px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--panel2); color: var(--text); border-color: var(--accent); }
+  .tb { position: absolute; top: -6px; right: -4px; min-width: 18px; height: 18px; border-radius: 9px; padding: 0 5px;
+    background: var(--warn); color: #241600; font: 700 11px/18px system-ui, sans-serif; font-style: normal; }
+  .tb.n { background: var(--accent); color: var(--accent-ink); }
+  .view { display: flex; flex-direction: column; }
+  .view:not(#scanView) { padding: 0 16px 24px; max-width: 680px; width: 100%; align-self: center; gap: 10px; }
+  .vh { display: flex; gap: 10px; align-items: center; }
+  .vh input[type=search] { flex: 1; font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--panel2); color: var(--text); min-width: 0; }
+  .vb { margin-top: 0; }
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .list .empty { padding: 18px; text-align: center; background: var(--panel); border-radius: 14px; }
+  .hist { width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 14px; color: var(--text); display: grid; gap: 2px; cursor: pointer; }
+  .hn { font-weight: 650; }
+  .hm, .hd { color: var(--muted); font-size: 13px; word-break: break-all; }
+  .pan { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+  .pan.bad { border-color: var(--err); background: #2a1316; }
+  .pan.soon { border-color: var(--warn); background: #2a2113; }
+  .pan .pn { font-weight: 650; }
+  .pan .pw { font-size: 14px; color: var(--muted); }
+  .pan.bad .pw { color: var(--err); font-weight: 600; }
+  .pan.soon .pw { color: var(--warn); font-weight: 600; }
+  .datebtn { position: relative; overflow: hidden; }
+  .datebtn input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+  /* health */
+  .health { margin-top: 10px; display: grid; gap: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ns, .lvl { font-size: 12px; font-weight: 600; border-radius: 6px; padding: 2px 8px; }
+  .ns { color: #fff; }
+  .ns-a { background: #038141; } .ns-b { background: #85bb2f; } .ns-c { background: #c9a400; } .ns-d { background: #ee8100; } .ns-e { background: #e63e11; }
+  .lvl-low { background: #12372f; color: #5ee0c3; } .lvl-moderate { background: #3a2a14; color: #ffc46b; } .lvl-high { background: #3d1518; color: #ff8a8a; }
+  .nut { font-size: 13px; color: var(--text); } .nut span { color: var(--muted); }
+  .warn { border-radius: 10px; padding: 8px 12px; font-size: 14px; font-weight: 650; margin-bottom: 10px; }
+  .warn.bad { background: #4a1418; color: #ffd0d0; }
+  .warn.unsure { background: #3a2a14; color: #ffd79a; }
+  .card.bad { border-color: var(--err); box-shadow: 0 0 0 1px var(--err) inset; }
+  .ticks { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .tick { font-size: 14px; display: inline-flex; gap: 6px; align-items: center; }
+  .tick input { width: 18px; height: 18px; accent-color: var(--accent); }
+  /* price book extras */
+  .cheap { font-size: 14px; margin-bottom: 8px; color: var(--text); }
+  .cheap b { color: var(--hit); }
+  .pu { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .prow .size { width: 34%; }
+  .sub { font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 12px; }
+  /* compare */
+  .cmp { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 14px; overflow: hidden; font-size: 14px; table-layout: fixed; }
+  .cmp th, .cmp td { padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top; text-align: left; word-break: break-word; }
+  .cmp tr:first-child th, .cmp tr:first-child td { border-top: 0; }
+  .cmp th { color: var(--muted); font-weight: 500; width: 28%; }
+  .cmp td.win { color: var(--hit); font-weight: 700; }
+  .cmp .ch img { width: 56px; height: 56px; object-fit: contain; background: #fff; border-radius: 8px; display: block; margin-bottom: 4px; }
+  .cmp .cn { font-weight: 650; }
   .label .lt, .info .lt { font-size: 13px; color: var(--muted); font-weight: 600; }
   .origin { color: var(--muted); font-size: 12px; margin-top: 2px; }
   .info dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 10px 0 4px; font-size: 14px; }
@@ -186,6 +244,15 @@
   </button>
 </header>
 
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="scan" aria-selected="true">Scan</button>
+  <button role="tab" data-tab="history" aria-selected="false">History</button>
+  <button role="tab" data-tab="pantry" aria-selected="false">Pantry<i class="tb" id="pantryBadge" hidden></i></button>
+  <button role="tab" data-tab="compare" aria-selected="false">Compare<i class="tb n" id="compareBadge" hidden></i></button>
+</nav>
+
+<section class="view" id="scanView">
+
 <div id="stage">
   <video id="video" playsinline muted autoplay></video>
   <div id="frame"><div id="laser"></div><i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i></div>
@@ -209,6 +276,22 @@
 <main id="out">
   <div class="card empty" id="placeholder">The scanned code, its type and any product details will show up here.</div>
 </main>
+</section>
+
+<section class="view" id="historyView" hidden>
+  <div class="vh"><input type="search" id="histSearch" placeholder="Search name or code" aria-label="Search history"><span class="muted small" id="histCount"></span></div>
+  <div class="row vb"><button class="btn" id="histExport">Export CSV</button><button class="btn" id="histClear">Clear</button></div>
+  <ul class="list" id="histList"></ul>
+</section>
+
+<section class="view" id="pantryView" hidden>
+  <div class="vh"><span class="muted small">Soonest first. Red has expired, amber is due within 7 days.</span></div>
+  <ul class="list" id="pantryList"></ul>
+</section>
+
+<section class="view" id="compareView" hidden>
+  <div id="compareBox"></div>
+</section>
 
 <footer><button class="lnk" id="verLink">Version <span id="ver"></span></button> · Product data from Open Food Facts, books from Open Library</footer>
 
@@ -220,6 +303,11 @@
         <button type="button" data-country="DE" role="radio" aria-label="Germany, euro"></button><button type="button" data-country="IN" role="radio" aria-label="India, rupee"></button>
       </span></div>
     <div class="muted small">Sets the currency for new prices and weighed-item labels, and which shops the search and compare buttons use.</div>
+  </div>
+  <div class="card vbox">
+    <div class="pt">My diet warnings</div>
+    <div class="muted small">A product that matches turns red. Based on Open Food Facts, which can be incomplete, so always check the pack.</div>
+    <div class="ticks" id="dietBox"></div>
   </div>
   <div class="card vbox">
     <div class="vrow"><span class="muted">Running</span><b id="abRunning"></b></div>
@@ -237,16 +325,28 @@
 <script>
 "use strict";
 /* Both written by tools/bump-version.mjs; don't edit by hand. */
-const APP_VERSION = "1.1.4";
+const APP_VERSION = "1.1.5";
 const APP_BUILT = "2026-11-12";
 document.getElementById("ver").textContent = APP_VERSION;
 
 const $ = (id) => document.getElementById(id);
 const stage = $("stage"), video = $("video"), out = $("out");
+/* Saved settings and data. The expense tracker lives on the same website
+   (priyasureshgermany.github.io), and browsers give one storage area per website,
+   so every key here starts with "scanner." to keep out of its way. Versions up
+   to 1.1.4 used bare names; those are moved over once. */
+const NS = "scanner.";
 const store = {
-  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch {} }
 };
+try {
+  for (const k of ["prices", "country", "sound", "autostart"]) {
+    const old = localStorage.getItem(k);
+    if (old !== null && localStorage.getItem(NS + k) === null) localStorage.setItem(NS + k, old);
+    if (old !== null) localStorage.removeItem(k);
+  }
+} catch {}
 
 /* ---------- friendly format names ---------- */
 const FORMAT_NAMES = {
@@ -340,7 +440,7 @@ function toast(msg) {
 /* ---------- camera ---------- */
 let stream = null, track = null, scanning = false, wantCamera = false, frameNo = 0;
 const canvas = document.createElement("canvas");
-const ctx = canvas.getContext("2d", { willReadFrequently: true });
+const cctx = canvas.getContext("2d", { willReadFrequently: true });
 
 function cameraHelp(err) {
   if (!window.isSecureContext) return "The camera only works when the app is opened over https (or on localhost).";
@@ -439,8 +539,8 @@ async function loop() {
     if (!(c.w >= 16 && c.h >= 16)) { await sleep(150); continue; }
     const maxSide = 1280, k = Math.min(1, maxSide / Math.max(c.w, c.h));
     canvas.width = Math.round(c.w * k); canvas.height = Math.round(c.h * k);
-    ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, canvas.width, canvas.height);
-    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    cctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, canvas.width, canvas.height);
+    const img = cctx.getImageData(0, 0, canvas.width, canvas.height);
     let results = [];
     try { results = await decode(img, ++frameNo % 3 === 0); } catch (e) { console.warn(e); await sleep(300); }
     if (!scanning) break;
@@ -734,8 +834,10 @@ function analyze(r) {
   return { kind: "text" };
 }
 
-let current = null, lastShown = null;
-function showResult(r, others) {
+/* What's on screen now: the scan, what it is, and what we've learned about it.
+   Pantry, Compare, history and the expense tracker all read from this. */
+let current = null, lastShown = null, ctx = null;
+function showResult(r, others, opts = {}) {
   lastShown = [r, others];
   /* The decoder reports UPC-A as a 13-digit EAN starting with 0; show it the
      way it's printed on the pack. Lookups still use the 13-digit number. */
@@ -752,6 +854,9 @@ function showResult(r, others) {
   const searchFor = a.pzn ? "PZN " + a.pzn : a.gtin || a.g14 || text;
   const shownText = a.kind === "gs1" && !a.url ? text.replace(/[␞␝␄]/g, " ").trim() : text;
   editingPrice = false;
+  const cached = a.gtin ? productCache()[a.gtin] : null;
+  ctx = { r, a, key: priceKey, code: a.gtin || a.g14 || text, name: (cached && cached.label) || defaultName(a, text), product: cached || null, histId: null };
+  if (opts.record !== false) ctx.histId = recordHistory(ctx);
 
   let html = `<div class="card" id="resCard">
     <span class="fmt">${esc(fmtName(r.format))}</span>
@@ -773,9 +878,12 @@ function showResult(r, others) {
   if (a.kind === "issn") html += `<div class="card muted">A magazine or newspaper code (ISSN). These aren't in the product databases; the last digits usually change with each issue.</div>`;
   if (a.kind === "store8") html += `<div class="card muted">A short code a shop made for its own use, so it can't be looked up.</div>`;
   if (lookupKind) html += `<div class="card" id="lookup"><span class="spinner"></span><span class="muted">${lookupKind === "book" ? "Looking up book…" : "Looking up product…"}</span></div>`;
-  if (priceKey) html += `<div class="card" id="prices"></div>`;
+  if (priceKey) html += `<div class="card" id="prices"></div><div class="card" id="acts"></div>`;
   out.innerHTML = html;
-  if (priceKey) renderPrices(priceKey, undefined, undefined, a.origin && a.origin.cc === "IN" || country === "IN" && a.kind === "product");
+  if (priceKey) {
+    renderPrices(priceKey, undefined, undefined, a.origin && a.origin.cc === "IN" || country === "IN" && a.kind === "product");
+    renderActs();
+  }
   if ($("labelSave")) $("labelSave").onclick = () => {
     renderPrices(priceKey, null, a.label.cents);
     $("prices").scrollIntoView({ behavior: "smooth", block: "center" });
@@ -789,6 +897,20 @@ function showResult(r, others) {
   });
   if (lookupKind === "book") lookupBook(a.gtin).then((res) => { if (current === r) renderBook(res, a); });
   else if (lookupKind === "product") lookup(a.gtin).then((res) => { if (current === r) renderLookup(res, a); });
+}
+function defaultName(a, text) {
+  if (a.kind === "label") return "Weighed item " + a.label.item;
+  if (a.pzn) return "Medicine, PZN " + a.pzn;
+  if (a.kind === "gs1" && a.title) return a.title + (a.gtin ? " " + a.gtin : "");
+  return a.gtin || text.replace(/[␞␝␄]/g, " ").trim().slice(0, 60);
+}
+/* Called once a lookup has found a name. */
+function learnName(name, product) {
+  if (!ctx) return;
+  ctx.name = name;
+  if (product) { ctx.product = product; saveProduct(product); }
+  updateHistory(ctx.histId, { name });
+  if (ctx.key) { if (!editingPrice) renderPrices(ctx.key); renderActs(); }
 }
 
 function infoCard(a) {
@@ -845,7 +967,9 @@ async function fetchJson(url, ms) {
 async function lookup(code) {
   if (lookupCache.has(code)) return lookupCache.get(code);
   if (!navigator.onLine) return { offline: true, code };
-  const fields = "product_name,product_name_en,generic_name,brands,quantity,image_front_small_url,image_small_url,categories";
+  const fields = "product_name,product_name_en,generic_name,brands,quantity,product_quantity,product_quantity_unit," +
+    "image_front_small_url,image_small_url,categories,nutriscore_grade,nutrient_levels,nutriments," +
+    "allergens_tags,traces_tags,ingredients_analysis_tags";
   const attempts = SOURCES.map((s) =>
     fetchJson(`https://${s.host}/api/v2/product/${enc(code)}.json?fields=${fields}`, 7000)
       .then((j) => (j && j.status === 1 && j.product ? { source: s, product: j.product } : null))
@@ -884,13 +1008,19 @@ function renderLookup(res, a) {
   const img = p.image_front_small_url || p.image_small_url;
   const meta = [p.brands, p.quantity].filter(Boolean).join(" · ");
   const cat = (p.categories || "").split(",").map((s) => s.trim().replace(/^[a-z]{2}:/, "")).filter(Boolean).slice(-1)[0];
-  box.innerHTML = `<div class="product">
+  const snap = snapshot(p, a.gtin, res.source);
+  const check = dietCheck(snap);
+  box.classList.toggle("bad", check.bad.length > 0);
+  $("resCard") && $("resCard").classList.toggle("bad", check.bad.length > 0);
+  box.innerHTML = `${warningsHtml(check)}<div class="product">
       ${img ? `<img src="${esc(img)}" alt="" referrerpolicy="no-referrer">` : ""}
       <div><div class="name">${esc(name)}</div>
         ${meta ? `<div class="meta">${esc(meta)}</div>` : ""}
         ${cat ? `<div class="meta">${esc(cat)}</div>` : ""}</div>
     </div>
+    ${healthHtml(snap)}
     <div class="src">From <a href="https://${res.source.host}/product/${enc(res.code)}" target="_blank" rel="noopener noreferrer">${esc(res.source.name)}</a></div>`;
+  learnName(snap.label, snap);
 }
 
 /* Books: ISBN-13 (978/979) in the free Open Library catalogue. */
@@ -925,6 +1055,9 @@ function renderBook(res, a) {
         <div class="meta">Book · ISBN ${esc(res.isbn)}</div></div>
     </div>
     <div class="src">From <a href="${esc(b.url || "https://openlibrary.org/isbn/" + res.isbn)}" target="_blank" rel="noopener noreferrer">Open Library</a></div>`;
+  if (b.title) learnName(b.title + (authors ? " – " + authors.split(",")[0] : ""), {
+    code: res.isbn, label: b.title, name: b.title, brand: authors, quantity: "", size: null, image: img || "", book: true, n: {}, levels: {}, allergens: [], traces: [], analysis: []
+  });
 }
 
 /* ---------- price book ---------- */
@@ -1013,21 +1146,44 @@ function labelCard(l) {
   </div>`;
 }
 
+/* Each price may carry its own pack size ("500 g"); otherwise the product's size
+   from Open Food Facts is used. With a size, prices also show per kg or litre,
+   so a big pack and a small one compare fairly. */
 function renderPrices(key, editId, prefillCents, mrpNote) {
   const box = $("prices");
   if (!box) return;
   if (mrpNote !== undefined) box.dataset.mrp = mrpNote ? "1" : "";
   const list = (loadPrices()[key] || []).slice().sort((a, b) => b.at.localeCompare(a.at));
   const curOf = (e) => e.cur || "EUR";
-  /* "lowest" only compares like with like: prices in the same currency. */
-  const sameCur = list.every((e) => curOf(e) === curOf(list[0]));
-  const low = list.length > 1 && sameCur ? Math.min(...list.map((e) => e.cents)) : null;
+  const prodSize = ctx && ctx.key === key && ctx.product ? ctx.product.size : null;
+  const sizeOf = (e) => parseSize(e.size) || prodSize;
   const editing = editId !== undefined;
   editingPrice = editing;
   const entry = editing && editId ? list.find((e) => e.id === editId) : null;
   const formCur = entry ? curOf(entry) : homeCur();
   const eg = formCur === "INR" ? "129.50" : "1,29";
+
+  /* Cheapest: each shop's latest price, compared within one currency (yours if
+     you have prices in it), per kg/litre when every one has a size. */
+  let best = null;
+  if (list.length > 1) {
+    const cur = list.some((e) => curOf(e) === homeCur()) ? homeCur() : curOf(list[0]);
+    const latestByShop = new Map();
+    for (const e of list) if (curOf(e) === cur && !latestByShop.has((e.shop || "").toLowerCase())) latestByShop.set((e.shop || "").toLowerCase(), e);
+    const cands = [...latestByShop.values()];
+    if (cands.length > 1) {
+      const sized = cands.every((e) => sizeOf(e)) && new Set(cands.map((e) => sizeOf(e).base)).size === 1;
+      const val = (e) => sized ? unitCents(e.cents, sizeOf(e)) : e.cents;
+      best = cands.reduce((x, y) => (val(y) < val(x) ? y : x));
+      best = { e: best, sized, cur };
+    }
+  }
+
   let html = `<div class="ph"><span class="pt">Price book</span>${!editing ? `<button class="btn small" id="addPrice">+ Add price</button>` : ""}</div>`;
+  if (best && !editing) {
+    const sz = sizeOf(best.e);
+    html += `<div class="cheap">Cheapest${best.e.shop ? " at <b>" + esc(best.e.shop) + "</b>" : ""}: <b>${money(best.e.cents, best.cur)}</b>${best.sized ? ` (${money(unitCents(best.e.cents, sz), best.cur)}/${unitLabel(sz)})` : ""}</div>`;
+  }
   if (box.dataset.mrp && !list.length && !editing) html += `<div class="muted small mrp">In India the MRP is printed on the pack, not stored in the barcode. Add it here to keep track of it.</div>`;
   if (editing) {
     html += `<form id="priceForm" class="pform" autocomplete="off">
@@ -1035,18 +1191,25 @@ function renderPrices(key, editId, prefillCents, mrpNote) {
         <label class="grow">Price<input id="pfPrice" inputmode="decimal" placeholder="${eg}" value="${entry ? plainAmount(entry.cents, formCur) : prefillCents ? plainAmount(prefillCents, formCur) : ""}" required></label>
         <label>Currency<select id="pfCur">${Object.keys(CUR_SIGN).map((c) => `<option value="${c}"${c === formCur ? " selected" : ""}>${CUR_SIGN[c]} ${c}</option>`).join("")}</select></label>
       </div>
-      <label><span>Shop (optional)</span><input id="pfShop" list="shopList" placeholder="${country === "IN" ? "DMart, Reliance…" : "REWE, Lidl…"}" value="${entry ? esc(entry.shop || "") : ""}"></label>
+      <div class="prow">
+        <label class="grow"><span>Shop (optional)</span><input id="pfShop" list="shopList" placeholder="${country === "IN" ? "DMart, Reliance…" : "REWE, Lidl…"}" value="${entry ? esc(entry.shop || "") : ""}"></label>
+        <label class="size"><span>Pack size</span><input id="pfSize" placeholder="${prodSize ? esc(sizeText(prodSize)) : "500 g"}" value="${entry ? esc(entry.size || "") : ""}"></label>
+      </div>
       <datalist id="shopList">${knownShops().map((s) => `<option value="${esc(s)}">`).join("")}</datalist>
+      ${prodSize ? `<div class="muted small">Pack size is ${esc(sizeText(prodSize))} from Open Food Facts; fill it in only if this pack is different.</div>` : ""}
       <div class="row"><button class="btn go" type="submit">Save</button><button class="btn" type="button" id="pfCancel">Cancel</button></div>
       <div class="err" id="pfErr" hidden>Enter a price, for example ${eg}</div>
     </form>`;
   }
   if (list.length) {
-    html += `<ul class="plist">${list.map((e) => `<li${e.id === editId ? ' class="being-edited"' : ""}>
-        <span class="pv">${money(e.cents, curOf(e))}</span>
-        <span class="pm">${e.shop ? "at " + esc(e.shop) + ", " : ""}${esc(shortDate(e.at))}${e.cents === low ? ' <span class="low">lowest</span>' : ""}</span>
+    html += `<ul class="plist">${list.map((e) => {
+      const sz = sizeOf(e), u = unitCents(e.cents, sz);
+      return `<li${e.id === editId ? ' class="being-edited"' : ""}>
+        <span class="pv">${money(e.cents, curOf(e))}${u !== null ? `<span class="pu">${money(u, curOf(e))}/${unitLabel(sz)}</span>` : ""}</span>
+        <span class="pm">${e.shop ? "at " + esc(e.shop) + ", " : ""}${esc(shortDate(e.at))}${e.size ? " · " + esc(e.size) : ""}${best && best.e.id === e.id ? ' <span class="low">cheapest</span>' : ""}</span>
         <button class="lnk" data-edit="${e.id}">Edit</button><button class="lnk del" data-del="${e.id}">Delete</button>
-      </li>`).join("")}</ul>`;
+      </li>`;
+    }).join("")}</ul>`;
   } else if (!editing) {
     html += `<div class="muted">No prices saved for this code yet.</div>`;
   }
@@ -1062,6 +1225,7 @@ function renderPrices(key, editId, prefillCents, mrpNote) {
     if (!all[key].length) delete all[key];
     savePrices(all);
     renderPrices(key);
+    if (ctx && ctx.key === key) renderActs();
     toast("Price deleted");
   });
   if (editing) {
@@ -1072,18 +1236,419 @@ function renderPrices(key, editId, prefillCents, mrpNote) {
       const cents = parsePrice($("pfPrice").value);
       if (cents === null) { $("pfErr").hidden = false; return; }
       const shop = $("pfShop").value.trim().slice(0, 40);
+      const size = $("pfSize").value.trim().slice(0, 20);
       const cur = $("pfCur").value;
       const all = loadPrices();
       const arr = all[key] || [];
-      if (entry) Object.assign(arr.find((x) => x.id === entry.id), { cents, cur, shop });
-      else arr.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), cents, cur, shop, at: new Date().toISOString() });
+      if (entry) Object.assign(arr.find((x) => x.id === entry.id), { cents, cur, shop, size });
+      else arr.push({ id: uid(), cents, cur, shop, size, at: new Date().toISOString() });
       all[key] = arr;
       savePrices(all);
       renderPrices(key);
+      if (ctx && ctx.key === key) renderActs();
       toast(entry ? "Price updated" : "Price saved");
     };
   }
 }
+
+/* ---------- small helpers ---------- */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const todayIso = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const isoOf = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const fmtDay = (iso) => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+const daysUntil = (iso) => { const t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((new Date(iso + "T00:00:00") - t) / 86400000); };
+
+/* ---------- product snapshots ---------- */
+/* What we keep about a looked-up product, so History, Pantry and Compare can
+   show it without asking the internet again. Kept for the last 300 products. */
+const productCache = () => store.get("products", {});
+function saveProduct(p) {
+  if (!p || !p.code) return;
+  const all = productCache();
+  all[p.code] = { ...p, seen: Date.now() };
+  const keys = Object.keys(all);
+  if (keys.length > 300) keys.sort((x, y) => all[x].seen - all[y].seen).slice(0, keys.length - 300).forEach((k) => delete all[k]);
+  store.set("products", all);
+}
+
+/* Pack size → { amount, base: "g" | "ml" }. Reads "400 g", "1,5 kg", "0.75 l",
+   "250 cl", "6 x 330 ml". Pieces and anything else: null. */
+function parseSize(s) {
+  if (!s) return null;
+  const m = String(s).toLowerCase().replace(",", ".").match(/(?:(\d+)\s*[x×]\s*)?(\d+(?:\.\d+)?)\s*(mg|kg|g|ml|cl|dl|l|ltr|litre|liter)\b/);
+  if (!m) return null;
+  const n = (m[1] ? +m[1] : 1) * +m[2];
+  const f = { mg: [0.001, "g"], g: [1, "g"], kg: [1000, "g"], ml: [1, "ml"], cl: [10, "ml"], dl: [100, "ml"], l: [1000, "ml"], ltr: [1000, "ml"], litre: [1000, "ml"], liter: [1000, "ml"] }[m[3]];
+  return n > 0 ? { amount: n * f[0], base: f[1] } : null;
+}
+function sizeFromOff(p) {
+  const u = String(p.product_quantity_unit || "").toLowerCase();
+  if (+p.product_quantity > 0 && (u === "g" || u === "ml")) return { amount: +p.product_quantity, base: u };
+  return parseSize(p.quantity);
+}
+const sizeText = (sz) => !sz ? "" : sz.base === "g" ? (sz.amount >= 1000 ? +(sz.amount / 1000).toFixed(3) + " kg" : +sz.amount.toFixed(1) + " g")
+  : (sz.amount >= 1000 ? +(sz.amount / 1000).toFixed(3) + " l" : +sz.amount.toFixed(1) + " ml");
+/* Price per kg or per litre, in cents. */
+const unitCents = (cents, sz) => sz && sz.amount > 0 ? Math.round(cents / sz.amount * 1000) : null;
+const unitLabel = (sz) => sz && sz.base === "ml" ? "l" : "kg";
+
+function snapshot(p, code, source) {
+  const name = p.product_name || p.product_name_en || p.generic_name || "";
+  const brand = (p.brands || "").split(",")[0].trim();
+  const n = p.nutriments || {};
+  const num = (v) => (v === undefined || v === null || v === "" || isNaN(+v) ? null : +v);
+  return {
+    code, name, brand, label: brand && name && !name.toLowerCase().includes(brand.toLowerCase()) ? brand + " " + name : name || brand || code,
+    quantity: p.quantity || "", size: sizeFromOff(p), image: p.image_front_small_url || p.image_small_url || "",
+    nutri: String(p.nutriscore_grade || "").toLowerCase(), levels: p.nutrient_levels || {},
+    n: { kcal: num(n["energy-kcal_100g"]), sugar: num(n.sugars_100g), fat: num(n.fat_100g), sat: num(n["saturated-fat_100g"]), salt: num(n.salt_100g) },
+    allergens: p.allergens_tags || [], traces: p.traces_tags || [], analysis: p.ingredients_analysis_tags || [],
+    source: source ? source.name : ""
+  };
+}
+
+/* ---------- health and diet ---------- */
+const ALLERGENS = [
+  ["en:peanuts", "Peanuts"], ["en:nuts", "Tree nuts"], ["en:gluten", "Gluten"], ["en:milk", "Milk"], ["en:eggs", "Eggs"],
+  ["en:soybeans", "Soy"], ["en:fish", "Fish"], ["en:crustaceans", "Shellfish"], ["en:molluscs", "Molluscs"],
+  ["en:sesame-seeds", "Sesame"], ["en:mustard", "Mustard"], ["en:celery", "Celery"], ["en:lupin", "Lupin"],
+  ["en:sulphur-dioxide-and-sulphites", "Sulphites"]
+];
+const ALLERGEN_NAME = Object.fromEntries(ALLERGENS);
+const tagName = (t) => ALLERGEN_NAME[t] || t.replace(/^[a-z]{2}:/, "").replace(/-/g, " ");
+let diet = store.get("diet", { allergens: [], vegetarian: false, vegan: false });
+
+/* Matches the product against your own warnings. bad = it does contain it;
+   unsure = it may (traces) or the database doesn't know. */
+function dietCheck(s) {
+  const bad = [], unsure = [];
+  if (!s || s.book) return { bad, unsure };
+  for (const t of diet.allergens) {
+    if (s.allergens.includes(t)) bad.push("Contains " + tagName(t).toLowerCase());
+    else if (s.traces.includes(t)) unsure.push("May contain traces of " + tagName(t).toLowerCase());
+  }
+  const an = s.analysis;
+  if (diet.vegan) {
+    if (an.includes("en:non-vegan")) bad.push("Not vegan");
+    else if (!an.includes("en:vegan")) unsure.push("Not known whether it's vegan");
+  } else if (diet.vegetarian) {
+    if (an.includes("en:non-vegetarian")) bad.push("Not vegetarian");
+    else if (!an.includes("en:vegetarian")) unsure.push("Not known whether it's vegetarian");
+  }
+  if (diet.allergens.length && !s.allergens.length && !s.traces.length && !an.length) unsure.push("No allergen information in the database");
+  return { bad, unsure };
+}
+function warningsHtml(c) {
+  if (!c.bad.length && !c.unsure.length) return "";
+  return `<div class="warn ${c.bad.length ? "bad" : "unsure"}">${c.bad.length ? "⚠ " : ""}${[...c.bad, ...c.unsure].map(esc).join(" · ")}</div>`;
+}
+const LEVEL_NAME = { fat: "Fat", "saturated-fat": "Saturated fat", sugars: "Sugar", salt: "Salt" };
+const fmtG = (v) => v === null ? "–" : (v < 10 ? +v.toFixed(1) : Math.round(v)).toLocaleString() + " g";
+function healthHtml(s) {
+  if (!s || s.book) return "";
+  const bits = [];
+  if (/^[a-e]$/.test(s.nutri)) bits.push(`<span class="ns ns-${s.nutri}" title="Nutri-Score">Nutri-Score <b>${s.nutri.toUpperCase()}</b></span>`);
+  for (const k of ["sugars", "fat", "saturated-fat", "salt"]) {
+    const lv = s.levels[k];
+    if (lv) bits.push(`<span class="lvl lvl-${esc(lv)}">${LEVEL_NAME[k]} ${esc(lv === "moderate" ? "medium" : lv)}</span>`);
+  }
+  const an = s.analysis;
+  if (an.includes("en:vegan")) bits.push(`<span class="lvl lvl-low">Vegan</span>`);
+  else if (an.includes("en:vegetarian")) bits.push(`<span class="lvl lvl-low">Vegetarian</span>`);
+  else if (an.includes("en:non-vegetarian")) bits.push(`<span class="lvl lvl-high">Not vegetarian</span>`);
+  const n = s.n, hasN = Object.values(n).some((v) => v !== null);
+  const per = s.size && s.size.base === "ml" ? "100 ml" : "100 g";
+  return `<div class="health">
+    ${bits.length ? `<div class="chips">${bits.join("")}</div>` : ""}
+    ${hasN ? `<div class="nut"><span>Per ${per}:</span> ${n.kcal !== null ? Math.round(n.kcal) + " kcal · " : ""}sugar ${fmtG(n.sugar)} · fat ${fmtG(n.fat)} · salt ${fmtG(n.salt)}</div>` : ""}
+    ${s.allergens.length ? `<div class="nut"><span>Allergens:</span> ${s.allergens.map(tagName).map(esc).join(", ")}</div>` : ""}
+    ${s.traces.length ? `<div class="nut"><span>May contain:</span> ${s.traces.map(tagName).map(esc).join(", ")}</div>` : ""}
+  </div>`;
+}
+function renderDietSettings() {
+  const box = $("dietBox");
+  box.innerHTML = `<label class="tick"><input type="checkbox" data-diet="vegetarian"${diet.vegetarian ? " checked" : ""}> Vegetarian</label>
+    <label class="tick"><input type="checkbox" data-diet="vegan"${diet.vegan ? " checked" : ""}> Vegan</label>
+    ${ALLERGENS.map(([t, nm]) => `<label class="tick"><input type="checkbox" data-allergen="${t}"${diet.allergens.includes(t) ? " checked" : ""}> ${nm}</label>`).join("")}`;
+  box.querySelectorAll("input").forEach((i) => i.onchange = () => {
+    if (i.dataset.diet) diet[i.dataset.diet] = i.checked;
+    else diet.allergens = [...box.querySelectorAll("[data-allergen]:checked")].map((x) => x.dataset.allergen);
+    store.set("diet", diet);
+    if (lastShown && !editingPrice) showResult(lastShown[0], lastShown[1], { record: false });
+  });
+}
+
+/* ---------- expense tracker inbox ---------- */
+/* The expense tracker is on the same website, so the two share browser storage.
+   It reads and empties "panappai.inbox"; this app only ever adds to the end of it
+   and never touches the tracker's own data. On iPhone, each Home Screen web app
+   gets its own separate storage, so this only works with both open in Chrome. */
+const INBOX = "panappai.inbox";
+function sendToTracker(item) {
+  let arr = [];
+  try {
+    const raw = localStorage.getItem(INBOX);
+    if (raw) { arr = JSON.parse(raw); if (!Array.isArray(arr)) throw new Error("not a list"); }
+  } catch {
+    /* Something we don't understand is there: leave it alone rather than overwrite it. */
+    toast("Couldn't reach the expense tracker's inbox");
+    return false;
+  }
+  arr.push({ id: uid(), at: new Date().toISOString(), ...item });
+  try { localStorage.setItem(INBOX, JSON.stringify(arr)); return true; }
+  catch { toast("Couldn't save: the phone's storage is full"); return false; }
+}
+/* The newest saved price for this item, in that currency. */
+function latestPrice(key, cur) {
+  const list = (loadPrices()[key] || []).filter((e) => (e.cur || "EUR") === cur).sort((a, b) => b.at.localeCompare(a.at));
+  return list[0] || null;
+}
+
+/* ---------- the Keep track card ---------- */
+function renderActs() {
+  const box = $("acts");
+  if (!box || !ctx) return;
+  const listCode = country === "IN" ? "in" : "de", listCur = country === "IN" ? "INR" : "EUR";
+  const shopPrice = latestPrice(ctx.key, listCur);
+  let eur = latestPrice(ctx.key, "EUR");
+  if (!eur && ctx.a.kind === "label" && ctx.a.label.sure && country === "DE") eur = { cents: ctx.a.label.cents, shop: "" };
+  const cmp = store.get("compare", []);
+  const inCmp = cmp.some((c) => c.key === ctx.key);
+  box.innerHTML = `<div class="ph"><span class="pt">Keep track</span></div>
+    <div class="row">
+      <button class="btn" id="actPantry">Add to pantry</button>
+      <button class="btn" id="actCompare"${inCmp ? " disabled" : ""}>${inCmp ? "In Compare ✓" : "Compare (" + cmp.length + "/2)"}</button>
+    </div>
+    <div id="pantryForm"></div>
+    <div class="sub">Expense tracker</div>
+    <div class="row">
+      <button class="btn" id="actShop">Add to shopping list · ${country === "IN" ? "Indian" : "German"} stores${shopPrice ? " · " + money(shopPrice.cents, listCur) : ""}</button>
+      ${eur ? `<button class="btn" id="actExpense">Log as expense · ${money(eur.cents, "EUR")}</button>` : ""}
+    </div>
+    <div class="muted small">${eur ? "" : "Log as expense appears once there's a euro price in the price book. "}Shows up the next time you open the expense tracker. On iPhone this works when both apps are open in Chrome, not as two separate Home Screen icons.</div>`;
+  $("actShop").onclick = () => {
+    if (sendToTracker({ kind: "shop", list: listCode, name: ctx.name, price: shopPrice ? shopPrice.cents : 0, currency: listCur, shop: shopPrice ? shopPrice.shop || "" : "", barcode: ctx.code })) {
+      $("actShop").disabled = true; $("actShop").textContent = "Added to shopping list ✓";
+      toast("Added. It appears the next time you open the expense tracker.");
+    }
+  };
+  if ($("actExpense")) $("actExpense").onclick = () => {
+    if (sendToTracker({ kind: "expense", name: ctx.name, price: eur.cents, currency: "EUR", date: todayIso(), shop: eur.shop || "", barcode: ctx.code })) {
+      $("actExpense").disabled = true; $("actExpense").textContent = "Logged as expense ✓";
+      toast("Logged. It appears the next time you open the expense tracker.");
+    }
+  };
+  $("actCompare").onclick = () => {
+    const list = store.get("compare", []).filter((c) => c.key !== ctx.key);
+    list.push({ key: ctx.key, code: ctx.code, name: ctx.name, gtin: ctx.a.gtin || null, added: Date.now() });
+    while (list.length > 2) list.shift();
+    store.set("compare", list);
+    renderActs();
+    toast(list.length === 2 ? "Ready: open the Compare tab" : "Added. Scan another product to compare.");
+    syncTabBadges();
+  };
+  $("actPantry").onclick = () => openPantryForm();
+}
+function openPantryForm() {
+  const box = $("pantryForm");
+  const exp = ctx.a.expiry && ctx.a.expiry.date ? isoOf(ctx.a.expiry.date) : "";
+  editingPrice = true;   /* hold the result still while typing, like the price form */
+  box.innerHTML = `<form class="pform" id="pfForm" autocomplete="off">
+      <label>Name<input id="ppName" value="${esc(ctx.name)}" required></label>
+      <label>Best before / expiry date${exp ? ' <span class="muted">(read from the code)</span>' : ""}<input id="ppDate" type="date" value="${exp}"></label>
+      <div class="row"><button class="btn go" type="submit">Add to pantry</button><button class="btn" type="button" id="ppCancel">Cancel</button></div>
+    </form>`;
+  $("ppCancel").onclick = () => { box.innerHTML = ""; editingPrice = false; };
+  $("pfForm").onsubmit = (e) => {
+    e.preventDefault();
+    const items = store.get("pantry", []);
+    items.push({ id: uid(), name: $("ppName").value.trim() || ctx.name, code: ctx.code, key: ctx.key, expiry: $("ppDate").value || "", added: new Date().toISOString() });
+    store.set("pantry", items);
+    box.innerHTML = ""; editingPrice = false;
+    toast("Added to the pantry");
+    syncTabBadges();
+  };
+}
+
+/* ---------- history ---------- */
+const loadHist = () => store.get("history", []);
+function recordHistory(c) {
+  const h = loadHist(), now = new Date().toISOString(), r = c.r;
+  /* The camera sees the same code many times; one entry per two minutes is enough. */
+  if (h[0] && h[0].code === r.text && Date.now() - Date.parse(h[0].at) < 120000) {
+    h[0].at = now; store.set("history", h); return h[0].id;
+  }
+  const e = { id: uid(), at: now, code: r.text, format: r.format, name: c.name, key: c.key, ct: r.contentType || "", sym: r.symbologyIdentifier || "" };
+  h.unshift(e);
+  if (h.length > 1000) h.length = 1000;
+  store.set("history", h);
+  return e.id;
+}
+function updateHistory(id, patch) {
+  if (!id) return;
+  const h = loadHist(), e = h.find((x) => x.id === id);
+  if (e) { Object.assign(e, patch); store.set("history", h); }
+}
+function renderHistory() {
+  const q = ($("histSearch").value || "").trim().toLowerCase();
+  const h = loadHist().filter((e) => !q || (e.name + " " + e.code + " " + fmtName(e.format)).toLowerCase().includes(q));
+  $("histList").innerHTML = h.length ? h.slice(0, 300).map((e) => {
+    const d = new Date(e.at);
+    const p = e.key ? (loadPrices()[e.key] || []).sort((a, b) => b.at.localeCompare(a.at))[0] : null;
+    const code = e.code.replace(/[␞␝␄]/g, " ").trim();
+    return `<li><button class="hist" data-hist="${e.id}">
+      <span class="hn">${esc(e.name || code)}</span>
+      <span class="hm">${esc(fmtName(e.format))} · ${esc(code.length > 32 ? code.slice(0, 32) + "…" : code)}</span>
+      <span class="hd">${esc(d.toLocaleDateString(undefined, { day: "numeric", month: "short" }))} ${esc(d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }))}${p ? " · " + money(p.cents, p.cur || "EUR") : ""}</span>
+    </button></li>`;
+  }).join("") : `<li class="muted empty">${q ? "Nothing matches." : "Scans you make show up here."}</li>`;
+  $("histCount").textContent = loadHist().length ? loadHist().length + " scans" : "";
+  $("histList").querySelectorAll("[data-hist]").forEach((b) => b.onclick = () => {
+    const e = loadHist().find((x) => x.id === b.dataset.hist);
+    if (!e) return;
+    showTab("scan");
+    showResult({ text: e.code, format: e.format, contentType: e.ct, symbologyIdentifier: e.sym }, [], { record: false });
+    out.scrollIntoView({ behavior: "smooth" });
+  });
+}
+/* Excel-friendly, like the expense tracker's export: semicolons, German decimal
+   commas, a byte-order mark so umlauts and ₹ survive, and long numbers written
+   as ="…" so Excel keeps every digit instead of showing 4,00042E+12. */
+function csvCell(v) {
+  v = v === null || v === undefined ? "" : String(v);
+  return /[";\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+const csvCode = (c) => /^\d{9,}$/.test(c) ? '="' + c + '"' : csvCell(c);
+function exportHistory() {
+  const h = loadHist();
+  if (!h.length) { toast("No scans to export yet"); return; }
+  const rows = [["Date", "Time", "Name", "Code", "Type", "Last price", "Currency", "Shop"].join(";")];
+  for (const e of h) {
+    const d = new Date(e.at);
+    const p = e.key ? (loadPrices()[e.key] || []).sort((a, b) => b.at.localeCompare(a.at))[0] : null;
+    rows.push([
+      d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }),
+      d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+      csvCell(e.name || ""), csvCode(e.code.replace(/[␞␝␄]/g, " ")), csvCell(fmtName(e.format)),
+      p ? (p.cents / 100).toFixed(2).replace(".", ",") : "", p ? p.cur || "EUR" : "", csvCell(p ? p.shop || "" : "")
+    ].join(";"));
+  }
+  const blob = new Blob(["﻿" + rows.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "scan-history-" + todayIso() + ".csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ---------- pantry ---------- */
+function pantryDue() {
+  return store.get("pantry", []).filter((p) => p.expiry && daysUntil(p.expiry) <= 7).length;
+}
+function renderPantry() {
+  const items = store.get("pantry", []).slice().sort((a, b) => (a.expiry || "9999") .localeCompare(b.expiry || "9999"));
+  $("pantryList").innerHTML = items.length ? items.map((p) => {
+    let when = "No date", cls = "";
+    if (p.expiry) {
+      const d = daysUntil(p.expiry);
+      cls = d < 0 ? "bad" : d <= 7 ? "soon" : "";
+      when = d < 0 ? `Expired ${-d === 1 ? "yesterday" : -d + " days ago"}` : d === 0 ? "Expires today" : d === 1 ? "Expires tomorrow"
+        : d <= 7 ? `Expires in ${d} days` : "Until " + fmtDay(p.expiry);
+    }
+    return `<li class="pan ${cls}">
+      <div class="pn">${esc(p.name)}</div>
+      <div class="pw">${esc(when)}${p.expiry && cls ? " · " + esc(fmtDay(p.expiry)) : ""}</div>
+      <div class="row">
+        <label class="btn small datebtn">Change date<input type="date" data-pdate="${p.id}" value="${esc(p.expiry)}"></label>
+        <button class="btn small" data-pdel="${p.id}">Used up</button>
+      </div></li>`;
+  }).join("") : `<li class="muted empty">Nothing in the pantry yet. After a scan, tap Add to pantry. Expiry dates on medicine packs and GS1 codes are filled in for you.</li>`;
+  $("pantryList").querySelectorAll("[data-pdel]").forEach((b) => b.onclick = () => {
+    store.set("pantry", store.get("pantry", []).filter((x) => x.id !== b.dataset.pdel));
+    renderPantry(); syncTabBadges(); toast("Removed from the pantry");
+  });
+  $("pantryList").querySelectorAll("[data-pdate]").forEach((i) => i.onchange = () => {
+    const all = store.get("pantry", []), it = all.find((x) => x.id === i.dataset.pdate);
+    if (it) { it.expiry = i.value; store.set("pantry", all); renderPantry(); syncTabBadges(); }
+  });
+}
+
+/* ---------- compare two products ---------- */
+function renderCompare() {
+  const list = store.get("compare", []);
+  const box = $("compareBox");
+  if (!list.length) {
+    box.innerHTML = `<div class="muted empty">Scan a product and tap Compare, then do the same with a second one. They show up here side by side.</div>`;
+    return;
+  }
+  const cols = list.map((c) => {
+    const p = (c.gtin && productCache()[c.gtin]) || null;
+    const pr = latestPrice(c.key, homeCur()) || (loadPrices()[c.key] || []).sort((a, b) => b.at.localeCompare(a.at))[0] || null;
+    const sz = (pr && parseSize(pr.size)) || (p && p.size) || null;
+    const cur = pr ? pr.cur || "EUR" : null;
+    return { c, p, pr, cur, sz, unit: pr ? unitCents(pr.cents, sz) : null };
+  });
+  const both = cols.length === 2;
+  /* Lower is better for every number here; mark it only when both sides have it
+     and, for money, they're in the same currency and unit. */
+  const better = (vals, ok = true) => {
+    if (!both || !ok || vals.some((v) => v === null || v === undefined) || vals[0] === vals[1]) return ["", ""];
+    return vals[0] < vals[1] ? ["win", ""] : ["", "win"];
+  };
+  const sameCur = both && cols[0].cur && cols[0].cur === cols[1].cur;
+  const sameUnit = both && cols[0].sz && cols[1].sz && cols[0].sz.base === cols[1].sz.base;
+  const row = (label, cells, marks = ["", ""]) => `<tr><th>${label}</th>${cells.map((v, i) => `<td class="${marks[i]}">${v}</td>`).join("")}${both ? "" : "<td class=\"muted\">–</td>"}</tr>`;
+  const nutriRank = (g) => /^[a-e]$/.test(g || "") ? "abcde".indexOf(g) : null;
+  /* Rounded the way fmtG shows them, so two values that read the same are never "better". */
+  const nv = (k) => cols.map((x) => { const v = x.p ? x.p.n[k] : null; return v === null || v === undefined ? null : v < 10 ? Math.round(v * 10) / 10 : Math.round(v); });
+  box.innerHTML = `<table class="cmp">
+    <tr><th></th>${cols.map((x, i) => `<td class="ch">${x.p && x.p.image ? `<img src="${esc(x.p.image)}" alt="" referrerpolicy="no-referrer">` : ""}<div class="cn">${esc(x.c.name)}</div><button class="lnk del" data-cdel="${i}">Remove</button></td>`).join("")}${both ? "" : `<td class="muted ch">Scan a second product and tap Compare</td>`}</tr>
+    ${row("Size", cols.map((x) => esc(x.sz ? sizeText(x.sz) : x.p && x.p.quantity || "–")))}
+    ${row("Price", cols.map((x) => x.pr ? money(x.pr.cents, x.cur) + (x.pr.shop ? `<div class="muted small">${esc(x.pr.shop)}</div>` : "") : "–"), better(cols.map((x) => x.pr ? x.pr.cents : null), sameCur))}
+    ${row("Per kg / litre", cols.map((x) => x.unit !== null ? money(x.unit, x.cur) + "/" + unitLabel(x.sz) : "–"), better(cols.map((x) => x.unit), sameCur && sameUnit))}
+    ${row("Nutri-Score", cols.map((x) => x.p && /^[a-e]$/.test(x.p.nutri) ? `<span class="ns ns-${x.p.nutri}"><b>${x.p.nutri.toUpperCase()}</b></span>` : "–"), better(cols.map((x) => x.p ? nutriRank(x.p.nutri) : null)))}
+    ${row("Energy /100", nv("kcal").map((v) => v === null ? "–" : Math.round(v) + " kcal"), better(nv("kcal")))}
+    ${row("Sugar /100", nv("sugar").map(fmtG), better(nv("sugar")))}
+    ${row("Fat /100", nv("fat").map(fmtG), better(nv("fat")))}
+    ${row("Sat. fat /100", nv("sat").map(fmtG), better(nv("sat")))}
+    ${row("Salt /100", nv("salt").map(fmtG), better(nv("salt")))}
+    ${row("Diet", cols.map((x) => { const an = x.p ? x.p.analysis : []; return an.includes("en:vegan") ? "Vegan" : an.includes("en:vegetarian") ? "Vegetarian" : an.includes("en:non-vegetarian") ? "Not vegetarian" : "–"; }))}
+  </table>
+  <div class="muted small">Green marks the better value: lower price, sugar, fat and salt, and a better Nutri-Score. Prices are only compared in the same currency, and per kg or litre only when both sizes are known.</div>`;
+  box.querySelectorAll("[data-cdel]").forEach((b) => b.onclick = () => {
+    const l = store.get("compare", []); l.splice(+b.dataset.cdel, 1); store.set("compare", l);
+    renderCompare(); syncTabBadges(); if (ctx && $("acts")) renderActs();
+  });
+}
+
+/* ---------- tabs ---------- */
+let tab = "scan", cameraWasOn = false;
+function showTab(t) {
+  if (t === tab) return;
+  if (tab === "scan" && t !== "scan") { cameraWasOn = !!stream; if (stream) { stopCamera(true); wantCamera = false; } }
+  tab = t;
+  document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+  document.querySelectorAll(".view").forEach((v) => v.hidden = v.id !== t + "View");
+  if (t === "history") renderHistory();
+  if (t === "pantry") renderPantry();
+  if (t === "compare") renderCompare();
+  if (t === "scan" && cameraWasOn) startCamera();
+  scrollTo(0, 0);
+}
+function syncTabBadges() {
+  const due = pantryDue(), cmp = store.get("compare", []).length;
+  $("pantryBadge").textContent = due || ""; $("pantryBadge").hidden = !due;
+  $("compareBadge").textContent = cmp || ""; $("compareBadge").hidden = !cmp;
+}
+document.querySelectorAll("[data-tab]").forEach((b) => b.onclick = () => showTab(b.dataset.tab));
+$("histSearch").oninput = renderHistory;
+$("histExport").onclick = exportHistory;
+$("histClear").onclick = () => {
+  if (!loadHist().length || !confirm("Clear the whole scan history? Saved prices, pantry and Compare stay.")) return;
+  store.set("history", []); renderHistory(); toast("History cleared");
+};
+syncTabBadges();
+renderDietSettings();
 
 /* ---------- start-up ---------- */
 if (!window.isSecureContext || !navigator.mediaDevices) {
@@ -1128,8 +1693,10 @@ async function updateNow() {
   b.disabled = true; b.textContent = "Updating…";
   /* Empty the cached copy so the reload fetches the new version from the website. */
   try {
-    if ("caches" in window) await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
-    if (navigator.serviceWorker) await Promise.all((await navigator.serviceWorker.getRegistrations()).map((r) => r.update().catch(() => {})));
+    /* Only this app's caches: the expense tracker on the same website keeps its own. */
+    if ("caches" in window) await Promise.all((await caches.keys()).filter((k) => k.startsWith("barcode-scanner-")).map((k) => caches.delete(k)));
+    /* getRegistration() is this app's own worker; getRegistrations() would include the expense tracker's. */
+    if (navigator.serviceWorker) { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.update().catch(() => {}); }
   } catch {}
   location.reload();
 }
@@ -1188,7 +1755,7 @@ function setCountry(cc) {
   store.set("country", country);
   syncCountry();
   /* Show the open result again with the new country's buttons and currency. */
-  if (lastShown && !editingPrice) showResult(lastShown[0], lastShown[1]);
+  if (lastShown && !editingPrice) showResult(lastShown[0], lastShown[1], { record: false });
   toast("Shopping in " + COUNTRIES[country].name + " (" + CUR_SIGN[COUNTRIES[country].cur] + ")");
 }
 document.querySelectorAll("[data-country]").forEach((b) => b.onclick = () => setCountry(b.dataset.country));

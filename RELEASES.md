@@ -6,6 +6,14 @@ release, and shown in the app under **About → What's new**.
 Each line is tagged `fix:`, `new:` or `better:`, which the app shows as a label
 beside it.
 
+## 1.1.5 — 2026-11-12
+- new: Send to the expense tracker: after a scan, Add to shopping list (German or Indian stores) or Log as expense. It appears the next time you open the expense tracker in Chrome.
+- new: Health and diet: Nutri-Score, sugar, fat and salt levels, allergens and vegetarian/vegan for food. Set your own warnings under About; a product that matches turns red.
+- new: Pantry tab: add scanned items with their expiry date (filled in from medicine and GS1 codes), soonest first, expired in red and due within 7 days in amber.
+- new: History tab: every scan, searchable, with Export CSV for Excel. Compare tab: two products side by side with price, price per kg or litre, Nutri-Score and nutrition.
+- better: Price book: shows which shop is cheapest, and the price per kg or litre when the pack size is known, so different sizes compare fairly.
+- fix: The scanner no longer clears the expense tracker's offline copy (they share a website), and its saved data now lives under its own scanner. names.
+
 ## 1.1.4 — 2026-11-12
 - better: The country chip on the scan screen and the switch under About show the flag: Germany with €, India with ₹.
 

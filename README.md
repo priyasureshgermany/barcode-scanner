@@ -36,6 +36,24 @@ Single `index.html`, no build step, works offline once opened (except product lo
 - **GS1 data:** GS1-128 and ITF-14 on cartons, GS1 DataBar, GS1 QR codes and GS1 Digital
   Link QR codes (`…/01/<GTIN>/…`, from id.gs1.org or a brand's own site) are decoded into
   readable fields, and the product inside is looked up like a normal barcode.
+- **Tabs:** Scan, History, Pantry and Compare.
+- **Health and diet:** for food, the Nutri-Score, sugar/fat/salt levels (low, medium, high),
+  values per 100 g, allergens and vegetarian/vegan from Open Food Facts. Under About you can
+  tick your own warnings (vegetarian, vegan, peanuts, milk, gluten…); a product that matches
+  turns red, and "may contain traces" or missing data shows in amber.
+- **Cheapest shop:** the price book compares each shop's latest price in one currency,
+  per kg or litre when the pack size is known (from Open Food Facts, or typed in with the price).
+- **Pantry:** add a scanned item with its best-before or expiry date (filled in from GS1 and
+  securPharm codes). Soonest first; expired items are red, those due within 7 days amber.
+- **History:** every scan, searchable, and exported as an Excel-friendly CSV (semicolons,
+  German decimal commas, barcodes kept as text).
+- **Compare:** two products side by side: size, price, price per kg/litre, Nutri-Score and
+  nutrition, with the better value in green.
+- **Expense tracker:** "Add to shopping list" (German or Indian stores, following the country
+  chip) and "Log as expense" (only with a euro price) add an item to `panappai.inbox` in the
+  browser storage the two apps share on priyasureshgermany.github.io. The expense tracker picks
+  it up the next time it opens. On iPhone this needs both apps open in Chrome: each Home Screen
+  web app gets its own separate storage.
 - “Scan a photo” reads a code from a photo or screenshot, for when the camera can't be used.
 - QR codes that are web links get an “Open link” button. Links never open by themselves.
 
@@ -55,6 +73,13 @@ GS1 DataBar, QR, Micro QR, Data Matrix, PDF417, Aztec.
   checks `version.json` on the website; when it's newer, an **Update available** badge shows,
   and **Update now** (under About) clears the copy and reloads onto the new version. About also
   shows the running version and What's new, read from `RELEASES.md`.
+
+## Sharing a website with the expense tracker
+
+Both apps are served from priyasureshgermany.github.io, and browsers give one storage area and
+one set of offline caches per website. So this app keeps its data under `scanner.*` keys, only
+deletes caches whose names start with `barcode-scanner-`, only updates its own service worker,
+and never writes the expense tracker's `panappai.*` keys except appending to `panappai.inbox`.
 
 ## Releasing
 

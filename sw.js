@@ -11,7 +11,7 @@
 
    VERSION is written by tools/bump-version.mjs. Changing it is also what makes
    the browser notice a new worker. */
-const VERSION = "1.1.4";
+const VERSION = "1.1.5";
 const APP = "barcode-scanner-app";
 const FILES = [
   "./index.html",
@@ -44,8 +44,9 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      /* also clears the per-version caches that 1.0.0 and 1.1.0 used */
-      .then((keys) => Promise.all(keys.filter((k) => k !== APP).map((k) => caches.delete(k))))
+      /* Clears the per-version caches that 1.0.0 and 1.1.0 used, and nothing else:
+         the expense tracker on the same website keeps its caches in the same place. */
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("barcode-scanner-") && k !== APP).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
