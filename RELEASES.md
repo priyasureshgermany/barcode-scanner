@@ -6,6 +6,9 @@ release, and shown in the app under **About → What's new**.
 Each line is tagged `fix:`, `new:` or `better:`, which the app shows as a label
 beside it.
 
+## 1.1.4 — 2026-11-12
+- better: The country chip on the scan screen and the switch under About show the flag: Germany with €, India with ₹.
+
 ## 1.1.3 — 2026-11-12
 - better: Country switch on the scan screen: the DE € / IN ₹ chip in the top bar flips between Germany and India with one tap, and stays in step with the choice under About.
 - better: A successful scan now gives one short, gentle vibration on Android. On iPhones with iOS 18 or later it tries the system haptic tick instead, since iPhone browsers can't vibrate.

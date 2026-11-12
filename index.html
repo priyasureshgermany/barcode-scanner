@@ -112,7 +112,13 @@
   .err { color: var(--err); }
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 0 16px 16px; margin-top: auto; }
   @media (max-width: 420px) { .iconbtn.upd .wide { display: none; } }
-  .iconbtn.chip { font-weight: 650; letter-spacing: .02em; padding: 0 10px; white-space: nowrap; flex: none; }
+  .iconbtn.chip { font-weight: 650; padding: 0 10px; white-space: nowrap; flex: none; gap: 6px; }
+  .flag { width: 21px; height: 14px; border-radius: 2px; flex: none; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
+  .seg { flex: none; }
+  .seg button { white-space: nowrap; display: inline-flex; align-items: center; }
+  .vrow:has(.seg) { align-items: center; flex-wrap: wrap; }
+  .vrow:has(.seg) > .muted { white-space: nowrap; }
+  .seg button .flag { width: 18px; height: 12px; vertical-align: -2px; margin-right: 6px; }
   .iconbtn.upd { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 650; }
   #aboutBtn { position: relative; }
   .dot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--warn); }
@@ -211,7 +217,7 @@
   <div class="card vbox">
     <div class="vrow"><span class="muted">Shopping in</span>
       <span class="seg" role="radiogroup" aria-label="Shopping country">
-        <button type="button" data-country="DE" role="radio">Germany €</button><button type="button" data-country="IN" role="radio">India ₹</button>
+        <button type="button" data-country="DE" role="radio" aria-label="Germany, euro"></button><button type="button" data-country="IN" role="radio" aria-label="India, rupee"></button>
       </span></div>
     <div class="muted small">Sets the currency for new prices and weighed-item labels, and which shops the search and compare buttons use.</div>
   </div>
@@ -231,7 +237,7 @@
 <script>
 "use strict";
 /* Both written by tools/bump-version.mjs; don't edit by hand. */
-const APP_VERSION = "1.1.3";
+const APP_VERSION = "1.1.4";
 const APP_BUILT = "2026-11-12";
 document.getElementById("ver").textContent = APP_VERSION;
 
@@ -1159,12 +1165,20 @@ async function loadNotes() {
     box.className = "muted"; box.textContent = "Release notes need a connection.";
   }
 }
+/* Small drawn flags rather than flag emoji, which Windows shows as plain letters. */
+const FLAGS = {
+  DE: `<svg class="flag" viewBox="0 0 5 3" aria-hidden="true"><rect width="5" height="1" fill="#000"/><rect y="1" width="5" height="1" fill="#DD0000"/><rect y="2" width="5" height="1" fill="#FFCE00"/></svg>`,
+  IN: `<svg class="flag" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="6.67" fill="#FF9933"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><rect y="13.33" width="30" height="6.67" fill="#138808"/><circle cx="15" cy="10" r="2.7" fill="none" stroke="#000080" stroke-width=".6"/><circle cx="15" cy="10" r=".6" fill="#000080"/><path d="M15 7.3v5.4M12.3 10h5.4M13.1 8.1l3.8 3.8M16.9 8.1l-3.8 3.8" stroke="#000080" stroke-width=".3"/></svg>`
+};
+document.querySelector('[data-country="DE"]').innerHTML = FLAGS.DE + "Germany €";
+document.querySelector('[data-country="IN"]').innerHTML = FLAGS.IN + "India ₹";
+
 /* Two places switch the country: the chip in the top bar (one tap flips it) and
    the Germany / India choice under About. Both go through setCountry. */
 function syncCountry() {
   document.querySelectorAll("[data-country]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.country === country)));
   const chip = $("countryChip"), other = country === "DE" ? "IN" : "DE";
-  chip.textContent = country + " " + CUR_SIGN[COUNTRIES[country].cur];
+  chip.innerHTML = FLAGS[country] + `<span aria-hidden="true">${CUR_SIGN[COUNTRIES[country].cur]}</span>`;
   chip.title = "Shopping in " + COUNTRIES[country].name + ". Tap to switch to " + COUNTRIES[other].name + ".";
   chip.setAttribute("aria-label", chip.title);
 }
