@@ -11,7 +11,7 @@
 
    VERSION is written by tools/bump-version.mjs. Changing it is also what makes
    the browser notice a new worker. */
-const VERSION = "1.1.2";
+const VERSION = "1.1.3";
 const APP = "barcode-scanner-app";
 const FILES = [
   "./index.html",

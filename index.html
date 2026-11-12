@@ -111,6 +111,8 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .err { color: var(--err); }
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 0 16px 16px; margin-top: auto; }
+  @media (max-width: 420px) { .iconbtn.upd .wide { display: none; } }
+  .iconbtn.chip { font-weight: 650; letter-spacing: .02em; padding: 0 10px; white-space: nowrap; flex: none; }
   .iconbtn.upd { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 650; }
   #aboutBtn { position: relative; }
   .dot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--warn); }
@@ -166,7 +168,8 @@
 <body>
 <header>
   <h1>Barcode Scanner</h1>
-  <button class="iconbtn upd" id="updBadge" hidden>Update available</button>
+  <button class="iconbtn upd" id="updBadge" hidden>Update<span class="wide"> available</span></button>
+  <button class="iconbtn chip" id="countryChip" aria-live="polite"></button>
   <button class="iconbtn" id="aboutBtn" title="Version and what's new">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>
     <span class="sr">About</span><i class="dot" id="aboutDot" hidden></i>
@@ -228,7 +231,7 @@
 <script>
 "use strict";
 /* Both written by tools/bump-version.mjs; don't edit by hand. */
-const APP_VERSION = "1.1.2";
+const APP_VERSION = "1.1.3";
 const APP_BUILT = "2026-11-12";
 document.getElementById("ver").textContent = APP_VERSION;
 
@@ -299,8 +302,28 @@ function beep() {
       o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.14);
     } catch {}
   }
-  if (navigator.vibrate) navigator.vibrate(60);   /* Android only; iPhone ignores it */
+  haptic();
 }
+
+/* A short, gentle buzz on a hit. Android Chrome has navigator.vibrate. iPhone
+   browsers don't, but on iOS 18+ WebKit plays the system "tick" when a switch
+   checkbox (<input type="checkbox" switch>) is toggled through its label, so the
+   app keeps a hidden one and clicks its label. Older iOS, phones with System
+   Haptics turned off, and browsers with neither just stay silent. */
+const haptic = (() => {
+  if (typeof navigator.vibrate === "function") return () => { try { navigator.vibrate(40); } catch {} };
+  const input = document.createElement("input");
+  if (!("switch" in input)) return () => {};
+  input.type = "checkbox";
+  input.setAttribute("switch", "");
+  input.tabIndex = -1;
+  const label = document.createElement("label");
+  label.setAttribute("aria-hidden", "true");
+  label.style.cssText = "position:fixed;left:-100px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none";
+  label.appendChild(input);
+  document.body.appendChild(label);
+  return () => { try { label.click(); } catch {} };
+})();
 
 let toastTimer;
 function toast(msg) {
@@ -1136,17 +1159,26 @@ async function loadNotes() {
     box.className = "muted"; box.textContent = "Release notes need a connection.";
   }
 }
+/* Two places switch the country: the chip in the top bar (one tap flips it) and
+   the Germany / India choice under About. Both go through setCountry. */
 function syncCountry() {
   document.querySelectorAll("[data-country]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.country === country)));
+  const chip = $("countryChip"), other = country === "DE" ? "IN" : "DE";
+  chip.textContent = country + " " + CUR_SIGN[COUNTRIES[country].cur];
+  chip.title = "Shopping in " + COUNTRIES[country].name + ". Tap to switch to " + COUNTRIES[other].name + ".";
+  chip.setAttribute("aria-label", chip.title);
 }
-document.querySelectorAll("[data-country]").forEach((b) => b.onclick = () => {
-  country = b.dataset.country;
+function setCountry(cc) {
+  if (cc === country) return;
+  country = cc;
   store.set("country", country);
   syncCountry();
   /* Show the open result again with the new country's buttons and currency. */
-  if (lastShown) showResult(lastShown[0], lastShown[1]);
-  toast("Shopping in " + COUNTRIES[country].name);
-});
+  if (lastShown && !editingPrice) showResult(lastShown[0], lastShown[1]);
+  toast("Shopping in " + COUNTRIES[country].name + " (" + CUR_SIGN[COUNTRIES[country].cur] + ")");
+}
+document.querySelectorAll("[data-country]").forEach((b) => b.onclick = () => setCountry(b.dataset.country));
+$("countryChip").onclick = () => setCountry(country === "DE" ? "IN" : "DE");
 syncCountry();
 
 function openAbout() {

@@ -6,6 +6,10 @@ release, and shown in the app under **About → What's new**.
 Each line is tagged `fix:`, `new:` or `better:`, which the app shows as a label
 beside it.
 
+## 1.1.3 — 2026-11-12
+- better: Country switch on the scan screen: the DE € / IN ₹ chip in the top bar flips between Germany and India with one tap, and stays in step with the choice under About.
+- better: A successful scan now gives one short, gentle vibration on Android. On iPhones with iOS 18 or later it tries the system haptic tick instead, since iPhone browsers can't vibrate.
+
 ## 1.1.2 — 2026-11-12
 - new: Germany or India: choose where you shop under About. Prices and weighed-item labels use € or ₹, and the buttons search idealo in Germany or Google Shopping and Amazon.in in India. Each product shows which country's GS1 issued its code.
 - new: Medicines: German securPharm and PZN barcodes and the GS1 Data Matrix on Indian medicines show the PZN or product code, batch, expiry date and serial number, with a warning when a pack has expired.
