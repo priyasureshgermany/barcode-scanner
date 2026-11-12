@@ -136,7 +136,22 @@
   .kind.new { background: #12372f; color: #5ee0c3; }
   .kind.fix { background: #3a2a14; color: #ffc46b; }
   .kind.better { background: #1f2a44; color: #8fb3ff; }
-  .label .lt { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .label .lt, .info .lt { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .origin { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .info dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 10px 0 4px; font-size: 14px; }
+  .info dt { color: var(--muted); }
+  .info dd { margin: 0; font-weight: 600; word-break: break-all; }
+  .exp { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 650; border-radius: 6px; padding: 2px 8px; }
+  .exp.bad { background: #3d1518; color: var(--err); }
+  .exp.soon { background: #3a2a14; color: var(--warn); }
+  .mrp { margin-bottom: 8px; }
+  .prow { display: flex; gap: 10px; }
+  .prow .grow { flex: 1; }
+  .pform select { font-size: 16px; padding: 10px 8px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--panel2); color: var(--text); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .seg button { background: none; border: 0; color: var(--text); padding: 6px 12px; font-size: 13px; cursor: pointer; }
+  .seg button[aria-checked="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 650; }
   .label .lp { font-size: 32px; font-weight: 700; margin: 2px 0 6px; font-variant-numeric: tabular-nums; }
   .label .muted b { color: var(--text); }
   .label.unsure { border-color: #5a4a22; }
@@ -186,10 +201,17 @@
   <div class="card empty" id="placeholder">The scanned code, its type and any product details will show up here.</div>
 </main>
 
-<footer><button class="lnk" id="verLink">Version <span id="ver"></span></button> · Product data from the Open Food Facts databases</footer>
+<footer><button class="lnk" id="verLink">Version <span id="ver"></span></button> · Product data from Open Food Facts, books from Open Library</footer>
 
 <dialog id="about">
   <div class="dh"><h2>About</h2><button class="iconbtn" id="aboutClose" aria-label="Close">✕</button></div>
+  <div class="card vbox">
+    <div class="vrow"><span class="muted">Shopping in</span>
+      <span class="seg" role="radiogroup" aria-label="Shopping country">
+        <button type="button" data-country="DE" role="radio">Germany €</button><button type="button" data-country="IN" role="radio">India ₹</button>
+      </span></div>
+    <div class="muted small">Sets the currency for new prices and weighed-item labels, and which shops the search and compare buttons use.</div>
+  </div>
   <div class="card vbox">
     <div class="vrow"><span class="muted">Running</span><b id="abRunning"></b></div>
     <div class="vrow"><span class="muted">Released</span><span id="abBuilt"></span></div>
@@ -206,7 +228,7 @@
 <script>
 "use strict";
 /* Both written by tools/bump-version.mjs; don't edit by hand. */
-const APP_VERSION = "1.1.1";
+const APP_VERSION = "1.1.2";
 const APP_BUILT = "2026-11-12";
 document.getElementById("ver").textContent = APP_VERSION;
 
@@ -222,7 +244,8 @@ const FORMAT_NAMES = {
   EAN13: "EAN-13", EAN8: "EAN-8", UPCA: "UPC-A", UPCE: "UPC-E", Code128: "Code 128", Code39: "Code 39",
   Code93: "Code 93", ITF: "ITF", ITF14: "ITF-14", Codabar: "Codabar", DataBar: "GS1 DataBar",
   DataBarExp: "GS1 DataBar Expanded", QRCode: "QR Code", MicroQRCode: "Micro QR", DataMatrix: "Data Matrix",
-  PDF417: "PDF417", Aztec: "Aztec"
+  PDF417: "PDF417", Aztec: "Aztec", PZN: "PZN (Code 39)", DataBarOmni: "GS1 DataBar", DataBarLtd: "GS1 DataBar Limited",
+  DataBarStk: "GS1 DataBar Stacked", DataBarStkOmni: "GS1 DataBar Stacked", DataBarExpStk: "GS1 DataBar Expanded"
 };
 const fmtName = (f) => FORMAT_NAMES[f] || FORMAT_NAMES[String(f).replace(/[\s-]/g, "")] || f;
 const norm = (f) => String(f).replace(/[\s-]/g, "").toUpperCase();
@@ -462,41 +485,270 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 function showBusy(msg) { out.innerHTML = `<div class="card muted"><span class="spinner"></span>${esc(msg)}</div>`; }
 function showMessage(msg, isErr) { out.innerHTML = `<div class="card ${isErr ? "err" : "muted"}">${esc(msg)}</div>`; }
 
-let current = null;
+/* ---------- country ---------- */
+/* Decides the currency for prices and which shops the search and compare
+   buttons use. Changed under About; until then it follows the phone's time zone. */
+const COUNTRIES = {
+  DE: { name: "Germany", cur: "EUR", google: "https://www.google.de/search?q=" },
+  IN: { name: "India", cur: "INR", google: "https://www.google.co.in/search?q=" }
+};
+function defaultCountry() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    if (/Kolkata|Calcutta/.test(tz) || /-IN$/i.test(navigator.language || "")) return "IN";
+  } catch {}
+  return "DE";
+}
+let country = COUNTRIES[store.get("country", "")] ? store.get("country", "") : defaultCountry();
+const homeCur = () => COUNTRIES[country].cur;
+
+/* Which GS1 member organisation issued a code's prefix: where the brand
+   registered it, which is not necessarily where the product was made. */
+const GS1_PREFIXES = [
+  [0, 19, "USA / Canada"], [30, 39, "USA / Canada"], [60, 139, "USA / Canada"], [300, 379, "France"],
+  [380, 380, "Bulgaria"], [383, 383, "Slovenia"], [385, 385, "Croatia"], [400, 440, "Germany", "DE"],
+  [450, 459, "Japan"], [460, 469, "Russia"], [471, 471, "Taiwan"], [489, 489, "Hong Kong"], [490, 499, "Japan"],
+  [500, 509, "United Kingdom"], [520, 521, "Greece"], [540, 549, "Belgium / Luxembourg"], [560, 560, "Portugal"],
+  [570, 579, "Denmark"], [590, 590, "Poland"], [594, 594, "Romania"], [599, 599, "Hungary"], [600, 601, "South Africa"],
+  [628, 628, "Saudi Arabia"], [629, 629, "United Arab Emirates"], [640, 649, "Finland"], [690, 699, "China"],
+  [700, 709, "Norway"], [729, 729, "Israel"], [730, 739, "Sweden"], [750, 750, "Mexico"], [760, 769, "Switzerland"],
+  [789, 790, "Brazil"], [800, 839, "Italy"], [840, 849, "Spain"], [858, 858, "Slovakia"], [859, 859, "Czechia"],
+  [868, 869, "Türkiye"], [870, 879, "Netherlands"], [880, 880, "South Korea"], [885, 885, "Thailand"],
+  [888, 888, "Singapore"], [890, 890, "India", "IN"], [893, 893, "Vietnam"], [896, 896, "Pakistan"],
+  [899, 899, "Indonesia"], [900, 919, "Austria"], [930, 939, "Australia"], [940, 949, "New Zealand"], [955, 955, "Malaysia"]
+];
+function gs1Origin(code) {
+  if (!/^\d{8}$|^\d{13}$/.test(code)) return null;
+  const p = +code.slice(0, 3);
+  const hit = GS1_PREFIXES.find(([a, b]) => p >= a && p <= b);
+  return hit ? { prefix: code.slice(0, 3), name: hit[2], cc: hit[3] || null } : null;
+}
+
+/* ---------- search and compare links ---------- */
+const enc = encodeURIComponent;
+const webSearch = (q) => COUNTRIES[country].google + enc(q);
+const idealoUrl = (q) => "https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=" + enc(q);
+const COMPARE = {
+  DE: [{ label: "Compare on idealo", url: idealoUrl }],
+  IN: [
+    { label: "Google Shopping", url: (q) => "https://www.google.co.in/search?tbm=shop&q=" + enc(q) },
+    { label: "Amazon.in", url: (q) => "https://www.amazon.in/s?k=" + enc(q) }
+  ]
+};
+/* The shopping country's own options, plus the other country's when the code
+   comes from there (an Indian import in a German shop, or the other way round). */
+function compareLinks(origin) {
+  const cc = [country];
+  if (origin && origin.cc && origin.cc !== country) cc.push(origin.cc);
+  return cc.flatMap((c) => COMPARE[c]);
+}
+function compareButtons(a) {
+  if (!a.compare) return "";
+  return compareLinks(a.origin).map((l, i) =>
+    `<a class="btn" data-cmp="${i}" href="${esc(l.url(a.compare))}" target="_blank" rel="noopener noreferrer">${esc(l.label)}</a>`).join("");
+}
+function setCompareQuery(a, q) {
+  const links = compareLinks(a.origin);
+  out.querySelectorAll("[data-cmp]").forEach((b) => { b.href = links[+b.dataset.cmp].url(q); });
+  const s = $("searchBtn");
+  if (s) s.href = webSearch(q);
+}
+
+/* ---------- GS1 data: Data Matrix, GS1-128, DataBar, GS1 QR, Digital Link ---------- */
+const AI_NAMES = {
+  "00": "Shipping unit (SSCC)", "01": "Product code (GTIN)", "02": "Contains (GTIN)", "10": "Batch / lot",
+  "11": "Made on", "12": "Due date", "13": "Packed on", "15": "Best before", "16": "Sell by", "17": "Expiry date",
+  "20": "Variant", "21": "Serial number", "22": "Variant", "30": "Count", "37": "Units", "240": "Extra product ID",
+  "241": "Customer part no.", "250": "Second serial", "400": "Order number", "410": "Ship to (GLN)",
+  "414": "Location (GLN)", "422": "Country of origin", "710": "PZN (Germany)", "711": "CIP (France)",
+  "712": "CN (Spain)", "714": "AIM (Portugal)"
+};
+const DATE_AIS = new Set(["11", "12", "13", "15", "16", "17"]);
+const ISO_COUNTRY = { "276": "Germany", "356": "India", "250": "France", "380": "Italy", "840": "USA", "156": "China", "826": "United Kingdom" };
+const ISO_CUR = { "978": "EUR", "356": "INR", "840": "USD", "826": "GBP" };
+
+/* YYMMDD; a day of 00 means "the end of that month". */
+function gs1Date(s) {
+  if (!/^\d{6}$/.test(s)) return null;
+  const y = 2000 + +s.slice(0, 2), m = +s.slice(2, 4), d = +s.slice(4, 6);
+  if (m < 1 || m > 12 || d > 31) return null;
+  const date = d ? new Date(y, m - 1, d) : new Date(y, m, 0);
+  return { date, text: d ? date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+                         : date.toLocaleDateString(undefined, { month: "short", year: "numeric" }) + " (end of month)" };
+}
+/* "(01)04150123456782(10)AB(17)270331" → { "01": "...", "10": "AB", "17": "270331" } */
+function parseGs1Text(t) {
+  if (!/^\(\d{2,4}\)/.test(t)) return null;
+  const f = {};
+  t.replace(/\((\d{2,4})\)([^(]*)/g, (_, ai, v) => { f[ai] = v; return ""; });
+  return Object.keys(f).length ? f : null;
+}
+/* https://id.gs1.org/01/08901234567892/10/AB12?17=270331, or a brand's own
+   domain with the same /01/<GTIN> path. */
+function parseDigitalLink(u) {
+  let url;
+  try { url = new URL(u); } catch { return null; }
+  const segs = url.pathname.split("/").filter(Boolean).map(decodeURIComponent);
+  const i = segs.findIndex((s, k) => (s === "01" || s === "gtin") && /^\d{8,14}$/.test(segs[k + 1] || ""));
+  if (i < 0) return null;
+  const f = { "01": segs[i + 1].padStart(14, "0") };
+  for (let k = i + 2; k + 1 < segs.length; k += 2) if (/^\d{2,4}$/.test(segs[k])) f[segs[k]] = segs[k + 1];
+  url.searchParams.forEach((v, k) => { if (/^\d{2,4}$/.test(k)) f[k] = v; });
+  return f;
+}
+/* German medicines carry an NTIN: the GTIN 04150 + PZN + check digit. */
+const pznFromNtin = (g14) => (/^04150\d{9}$/.test(g14) ? g14.slice(5, 13) : null);
+function pznValid(p) {
+  const d = [...p].map(Number);
+  if (d.length === 8) return d.slice(0, 7).reduce((s, x, i) => s + x * (i + 1), 0) % 11 === d[7];
+  if (d.length === 7) return d.slice(0, 6).reduce((s, x, i) => s + x * (i + 2), 0) % 11 === d[6];
+  return false;
+}
+/* GTIN-14 → the 13- or 8-digit code the shops and databases use, or null for a
+   carton code (indicator digit 1–8), which no consumer database lists. */
+function retailGtin(g) {
+  g = String(g).padStart(14, "0");
+  if (g[0] !== "0") return null;
+  return g.startsWith("000000") ? g.slice(6) : g.slice(1);
+}
+function fromAis(f, title) {
+  const a = { kind: "gs1", title, rows: [], expiry: null };
+  for (const [ai, v] of Object.entries(f)) {
+    let name = AI_NAMES[ai], val = v;
+    if (DATE_AIS.has(ai)) { const d = gs1Date(v); if (d) { val = d.text; if (ai === "17" || ai === "15") a.expiry = { date: d.date, bestBefore: ai === "15" }; } }
+    else if (/^31[0-5]\d$/.test(ai) || /^3[23]\d\d$/.test(ai)) {
+      const dec = +ai[3], unit = ai.startsWith("310") ? "kg" : ai.startsWith("320") ? "lb" : ai.startsWith("330") ? "kg" : "";
+      name = ai.startsWith("330") ? "Gross weight" : ai.startsWith("310") || ai.startsWith("320") ? "Net weight" : "Measure (" + ai + ")";
+      val = (+v / 10 ** dec).toLocaleString(undefined, { maximumFractionDigits: dec }) + (unit ? " " + unit : "");
+    } else if (/^392\d$/.test(ai)) { name = "Price"; val = (+v / 10 ** +ai[3]).toFixed(+ai[3]); }
+    else if (/^393\d$/.test(ai)) { name = "Price"; const cur = ISO_CUR[v.slice(0, 3)] || v.slice(0, 3); val = money(Math.round(+v.slice(3) / 10 ** +ai[3] * 100), cur); }
+    else if (ai === "422") val = ISO_COUNTRY[v] || v;
+    else if (/^9\d$/.test(ai)) name = "Company's own data (" + ai + ")";
+    a.rows.push([name || "AI " + ai, val]);
+  }
+  const g14 = f["01"] || f["02"];
+  if (g14) {
+    a.g14 = g14.padStart(14, "0");
+    a.pzn = pznFromNtin(g14.padStart(14, "0"));
+    a.gtin = a.pzn ? null : retailGtin(g14);
+    a.carton = !a.pzn && !a.gtin;
+  }
+  if (f["710"]) a.pzn = f["710"].replace(/^-/, "");
+  if (a.pzn) { a.title = "Medicine pack"; a.rows.unshift(["PZN", a.pzn]); }
+  /* Expiry + batch + serial is the medicine pattern (India's export rules, the EU's
+     FMD). Medicines aren't in the food and product databases, so no lookup. */
+  else if (f["17"] && f["21"] && f["10"]) { a.title = "Medicine pack"; a.medicine = true; }
+  if (f["00"]) a.title = "Shipping label (GS1-128)";
+  return a;
+}
+/* securPharm's other layout (IFA, ISO/IEC 15434 format 06): data identifiers
+   9N (PPN, which wraps the PZN), 1T batch, D expiry, S serial, 8P GTIN. */
+function parseIfa(t) {
+  const s = t.replace(/[␞\u001E]/g, "\x1E").replace(/[␝\u001D]/g, "\x1D").replace(/[␄\u0004]/g, "");
+  if (!/^\[\)>\x1E06\x1D/.test(s)) return null;
+  const f = {};
+  for (const part of s.slice(7).replace(/\x1E$/, "").split("\x1D")) {
+    const m = part.match(/^(9N|1T|16D|8P|D|S)(.*)$/);
+    if (m) f[m[1]] = m[2];
+  }
+  const a = { kind: "gs1", title: "Medicine pack (securPharm)", rows: [], expiry: null };
+  if (f["9N"]) {
+    a.pzn = /^11\d{10}$/.test(f["9N"]) ? f["9N"].slice(2, 10) : null;
+    if (a.pzn) a.rows.push(["PZN", a.pzn]); else a.rows.push(["Product number (PPN)", f["9N"]]);
+  }
+  if (f["8P"]) { a.rows.push(["Product code (GTIN)", f["8P"]]); a.gtin = retailGtin(f["8P"]); }
+  if (f["1T"]) a.rows.push(["Batch / lot", f["1T"]]);
+  if (f["D"]) { const d = gs1Date(f["D"]); a.rows.push(["Expiry date", d ? d.text : f["D"]]); if (d) a.expiry = { date: d.date }; }
+  if (f["16D"]) a.rows.push(["Made on", f["16D"].replace(/^(\d{4})(\d\d)(\d\d)$/, "$3.$2.$1")]);
+  if (f["S"]) a.rows.push(["Serial number", f["S"]]);
+  if (a.pzn) a.gtin = null;
+  return a;
+}
+
+/* What a scan is, and what to do with it. */
+function analyze(r) {
+  const t = r.text, f = norm(r.format), sym = r.symbologyIdentifier || "";
+  if (/^https?:\/\/\S+$/i.test(t.trim())) {
+    const dl = parseDigitalLink(t.trim());
+    if (!dl) return { kind: "url", url: t.trim() };
+    return { ...fromAis(dl, "GS1 Digital Link"), url: t.trim() };
+  }
+  const isGs1 = r.contentType === "GS1" || /^\][dCQe][1-3]?$/.test(sym) && sym !== "]d1" && sym !== "]C0" && sym !== "]Q1";
+  const ais = parseGs1Text(t);
+  if (ais && (isGs1 || f.startsWith("DATABAR"))) {
+    const sub = f === "CODE128" ? "GS1-128" : f.startsWith("DATABAR") ? "GS1 DataBar" : f === "QRCODE" ? "GS1 QR code" : "GS1 Data Matrix";
+    const a = fromAis(ais, "GS1 data (" + sub + ")");
+    if (a.title === "GS1 data (GS1 DataBar)" && a.rows.length === 1) a.title = "GS1 DataBar";
+    return a;
+  }
+  if (r.contentType === "ISO15434" || t.startsWith("[)>")) { const a = parseIfa(t); if (a) return a; }
+  if (f === "PZN" || f === "CODE39") {
+    const m = t.match(/^-?(\d{7,8})$/);
+    if (m && (f === "PZN" || t.startsWith("-")) && pznValid(m[1])) {
+      return { kind: "gs1", title: "Medicine (PZN barcode)", rows: [["PZN", m[1]]], pzn: m[1] };
+    }
+  }
+  if ((isRetail(r.format) || f === "ITF" && /^\d{14}$/.test(t)) && /^\d{6,14}$/.test(t)) {
+    let code = gtinFor(r);
+    if (code.length === 14) {
+      /* ITF-14 on cartons: a GTIN-14, the packs inside carry the shop barcode. */
+      const g = retailGtin(code);
+      if (!g) return { kind: "gs1", title: "Outer case (ITF-14)", rows: [["Product code (GTIN-14)", code]], carton: true };
+      code = g;
+    }
+    if (/^2\d{12}$/.test(code)) return { kind: "label", label: readStoreLabel(code) };
+    if (/^[02]\d{7}$/.test(code)) return { kind: "store8" };
+    if (/^97[89]\d{10}$/.test(code)) return { kind: "book", gtin: code };
+    if (/^977\d{10}$/.test(code)) return { kind: "issn", gtin: code };
+    return { kind: "product", gtin: code };
+  }
+  return { kind: "text" };
+}
+
+let current = null, lastShown = null;
 function showResult(r, others) {
+  lastShown = [r, others];
   /* The decoder reports UPC-A as a 13-digit EAN starting with 0; show it the
      way it's printed on the pack. Lookups still use the 13-digit number. */
   if (norm(r.format) === "EAN13" && /^0\d{12}$/.test(r.text)) r = { ...r, format: "UPCA", text: r.text.slice(1), gtin: r.text };
   current = r;
   const text = r.text;
-  const isUrl = /^https?:\/\/\S+$/i.test(text.trim());
+  const a = analyze(r);
+  const isUrl = !!a.url;
   const long = text.length > 40;
-  const label = norm(r.format) === "EAN13" ? readStoreLabel(text) : null;
-  /* Shop label codes mean nothing outside that shop, so they are never looked up. */
-  const isProduct = !label && isRetail(r.format) && /^\d{6,14}$/.test(text);
-  const priceKey = label ? label.key : gtinFor(r);
+  a.origin = a.gtin ? gs1Origin(a.gtin) : null;
+  a.compare = a.pzn ? "PZN " + a.pzn : a.gtin && a.kind !== "issn" ? a.gtin : null;
+  const lookupKind = a.kind === "book" ? "book" : a.gtin && a.kind !== "issn" && !a.pzn && !a.medicine ? (/^97[89]/.test(a.gtin) ? "book" : "product") : null;
+  const priceKey = a.kind === "label" ? a.label.key : a.pzn ? "pzn:" + a.pzn : a.gtin || a.g14 || (isUrl ? null : text);
+  const searchFor = a.pzn ? "PZN " + a.pzn : a.gtin || a.g14 || text;
+  const shownText = a.kind === "gs1" && !a.url ? text.replace(/[␞␝␄]/g, " ").trim() : text;
   editingPrice = false;
+
   let html = `<div class="card" id="resCard">
     <span class="fmt">${esc(fmtName(r.format))}</span>
-    <div class="code${long ? " long" : ""}">${esc(text)}</div>
+    <div class="code${long || a.kind === "gs1" ? " long" : ""}">${esc(shownText)}</div>
+    ${a.origin ? `<div class="origin">GS1 ${esc(a.origin.name)} (${esc(a.origin.prefix)}): where the brand registered this code, not necessarily where it was made</div>` : ""}
     <div class="row">
       <button class="btn" id="copyBtn">Copy</button>
-      ${isUrl ? `<a class="btn go" href="${esc(text.trim())}" target="_blank" rel="noopener noreferrer">Open link</a>` : ""}
-      ${!isUrl ? `<a class="btn" href="https://www.google.com/search?q=${encodeURIComponent(text)}" target="_blank" rel="noopener noreferrer">Search the web</a>` : ""}
-      ${isProduct ? `<a class="btn" id="idealoBtn" href="${idealoUrl(text)}" target="_blank" rel="noopener noreferrer">Compare prices</a>` : ""}
+      ${isUrl ? `<a class="btn go" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">Open link</a>` : ""}
+      ${!isUrl ? `<a class="btn" id="searchBtn" href="${esc(webSearch(searchFor))}" target="_blank" rel="noopener noreferrer">Search the web</a>` : ""}
+      ${compareButtons(a)}
     </div>`;
   if (others && others.length) {
     html += `<div class="others muted" style="margin-top:12px">Also in the photo:<br>${others.map((o, i) =>
       `<button class="btn" data-other="${i}">${esc(fmtName(o.format))}: ${esc(o.text.slice(0, 24))}${o.text.length > 24 ? "…" : ""}</button>`).join("")}</div>`;
   }
   html += `</div>`;
-  if (label) html += labelCard(label);
-  if (isProduct) html += `<div class="card" id="lookup"><span class="spinner"></span><span class="muted">Looking up product…</span></div>`;
-  if (!isUrl) html += `<div class="card" id="prices"></div>`;
+  if (a.kind === "label") html += labelCard(a.label);
+  if (a.kind === "gs1") html += infoCard(a);
+  if (a.kind === "issn") html += `<div class="card muted">A magazine or newspaper code (ISSN). These aren't in the product databases; the last digits usually change with each issue.</div>`;
+  if (a.kind === "store8") html += `<div class="card muted">A short code a shop made for its own use, so it can't be looked up.</div>`;
+  if (lookupKind) html += `<div class="card" id="lookup"><span class="spinner"></span><span class="muted">${lookupKind === "book" ? "Looking up book…" : "Looking up product…"}</span></div>`;
+  if (priceKey) html += `<div class="card" id="prices"></div>`;
   out.innerHTML = html;
-  if (!isUrl) renderPrices(priceKey);
+  if (priceKey) renderPrices(priceKey, undefined, undefined, a.origin && a.origin.cc === "IN" || country === "IN" && a.kind === "product");
   if ($("labelSave")) $("labelSave").onclick = () => {
-    renderPrices(priceKey, null, label.cents);
+    renderPrices(priceKey, null, a.label.cents);
     $("prices").scrollIntoView({ behavior: "smooth", block: "center" });
   };
   $("copyBtn").onclick = async () => {
@@ -506,7 +758,25 @@ function showResult(r, others) {
   out.querySelectorAll("[data-other]").forEach((b) => {
     b.onclick = () => { const i = +b.dataset.other; const rest = [r, ...others.filter((_, j) => j !== i)]; showResult(others[i], rest); };
   });
-  if ($("lookup")) lookup(r).then((res) => { if (current === r) renderLookup(res, r); });
+  if (lookupKind === "book") lookupBook(a.gtin).then((res) => { if (current === r) renderBook(res, a); });
+  else if (lookupKind === "product") lookup(a.gtin).then((res) => { if (current === r) renderLookup(res, a); });
+}
+
+function infoCard(a) {
+  let warn = "";
+  if (a.expiry) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const days = Math.round((a.expiry.date - today) / 86400000);
+    if (days < 0) warn = `<div class="exp bad">${a.expiry.bestBefore ? "Best-before date has passed" : "Expired"}</div>`;
+    else if (days <= 90) warn = `<div class="exp soon">${a.expiry.bestBefore ? "Best before" : "Expires"} in ${days} day${days === 1 ? "" : "s"}</div>`;
+  }
+  const note = a.carton ? `<div class="muted small">This is an outer-case code (GTIN-14). The single packs inside have their own barcode, which is the one that can be looked up.</div>`
+    : a.pzn ? `<div class="muted small">PZN is the German pharmacy number. Medicines aren't in the free product databases; use the buttons above to find this one.</div>`
+    : a.medicine ? `<div class="muted small">Medicines aren't in the free product databases; use the buttons above to find this one.</div>` : "";
+  return `<div class="card info">
+    <div class="lt">${esc(a.title)}</div>${warn}
+    <dl>${a.rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>${note}
+  </div>`;
 }
 
 /* ---------- product lookup ---------- */
@@ -524,7 +794,8 @@ function upceToUpca(e) {
 function gtinFor(r) {
   const t = r.text;
   if (r.gtin) return r.gtin;
-  if (norm(r.format) === "UPCE" && /^\d{8}$/.test(t)) return upceToUpca(t);
+  if (norm(r.format) === "UPCE" && /^\d{8}$/.test(t)) return "0" + upceToUpca(t);
+  if (norm(r.format) === "UPCA" && /^\d{12}$/.test(t)) return "0" + t;
   return t;
 }
 
@@ -542,13 +813,12 @@ async function fetchJson(url, ms) {
   finally { clearTimeout(t); }
 }
 
-async function lookup(r) {
-  const code = gtinFor(r);
+async function lookup(code) {
   if (lookupCache.has(code)) return lookupCache.get(code);
   if (!navigator.onLine) return { offline: true, code };
   const fields = "product_name,product_name_en,generic_name,brands,quantity,image_front_small_url,image_small_url,categories";
   const attempts = SOURCES.map((s) =>
-    fetchJson(`https://${s.host}/api/v2/product/${encodeURIComponent(code)}.json?fields=${fields}`, 7000)
+    fetchJson(`https://${s.host}/api/v2/product/${enc(code)}.json?fields=${fields}`, 7000)
       .then((j) => (j && j.status === 1 && j.product ? { source: s, product: j.product } : null))
       .catch(() => undefined));
   /* All four are asked at once; take the first in priority order that knows the
@@ -556,28 +826,31 @@ async function lookup(r) {
   const results = [];
   let hit = null;
   for (const a of attempts) { const x = await a; results.push(x); if (x) { hit = x; break; } }
-  const out = hit ? { code, ...hit } : { code, notFound: true, failed: results.every((x) => x === undefined) };
-  if (!out.failed) lookupCache.set(code, out);
-  return out;
+  const res = hit ? { code, ...hit } : { code, notFound: true, failed: results.every((x) => x === undefined) };
+  if (!res.failed) lookupCache.set(code, res);
+  return res;
 }
 
-function renderLookup(res, r) {
+function notFoundHtml(a, what) {
+  const tip = a.origin && a.origin.cc === "IN" || country === "IN"
+    ? "Indian products are often missing from it. The Search and Amazon.in buttons above usually find them."
+    : "Try the Search and Compare buttons above.";
+  return `<div class="muted">This ${what} isn't in the free ${what === "book" ? "Open Library catalogue" : "Open Food Facts databases"} yet. ${tip}</div>`;
+}
+
+function renderLookup(res, a) {
   const box = $("lookup");
   if (!box) return;
   if (res.offline) { box.innerHTML = `<div class="muted">You are offline, so the product can't be looked up right now.</div>`; return; }
   if (res.failed) { box.innerHTML = `<div class="muted">The product databases could not be reached. Check your connection and scan again.</div>`; return; }
-  if (res.notFound) {
-    box.innerHTML = `<div class="muted">This product isn't in the free Open Food Facts databases yet. Try “Search the web” above.</div>`;
-    return;
-  }
+  if (res.notFound) { box.innerHTML = notFoundHtml(a, "product"); return; }
   const p = res.product;
   const realName = p.product_name || p.product_name_en || p.generic_name || "";
   const name = realName || "Unnamed product";
-  if (realName && $("idealoBtn")) {
-    /* Search by brand + name; idealo knows few barcodes but most product names. */
+  if (realName) {
+    /* Search by brand + name; shops know few barcodes but most product names. */
     const brand = (p.brands || "").split(",")[0].trim();
-    const q = brand && !realName.toLowerCase().includes(brand.toLowerCase()) ? brand + " " + realName : realName;
-    $("idealoBtn").href = idealoUrl(q);
+    setCompareQuery(a, brand && !realName.toLowerCase().includes(brand.toLowerCase()) ? brand + " " + realName : realName);
   }
   const img = p.image_front_small_url || p.image_small_url;
   const meta = [p.brands, p.quantity].filter(Boolean).join(" · ");
@@ -588,24 +861,63 @@ function renderLookup(res, r) {
         ${meta ? `<div class="meta">${esc(meta)}</div>` : ""}
         ${cat ? `<div class="meta">${esc(cat)}</div>` : ""}</div>
     </div>
-    <div class="src">From <a href="https://${res.source.host}/product/${encodeURIComponent(res.code)}" target="_blank" rel="noopener noreferrer">${esc(res.source.name)}</a></div>`;
+    <div class="src">From <a href="https://${res.source.host}/product/${enc(res.code)}" target="_blank" rel="noopener noreferrer">${esc(res.source.name)}</a></div>`;
 }
 
-/* ---------- compare prices ---------- */
-const idealoUrl = (q) => "https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=" + encodeURIComponent(q);
+/* Books: ISBN-13 (978/979) in the free Open Library catalogue. */
+async function lookupBook(isbn) {
+  const key = "isbn:" + isbn;
+  if (lookupCache.has(key)) return lookupCache.get(key);
+  if (!navigator.onLine) return { offline: true };
+  try {
+    const j = await fetchJson(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`, 8000);
+    const b = j && j["ISBN:" + isbn];
+    const res = b ? { book: b, isbn } : { notFound: true };
+    lookupCache.set(key, res);
+    return res;
+  } catch { return { failed: true }; }
+}
+function renderBook(res, a) {
+  const box = $("lookup");
+  if (!box) return;
+  if (res.offline) { box.innerHTML = `<div class="muted">You are offline, so the book can't be looked up right now.</div>`; return; }
+  if (res.failed) { box.innerHTML = `<div class="muted">Open Library could not be reached. Check your connection and scan again.</div>`; return; }
+  if (res.notFound) { box.innerHTML = notFoundHtml(a, "book"); return; }
+  const b = res.book;
+  const authors = (b.authors || []).map((x) => x.name).join(", ");
+  const meta = [(b.publishers || []).map((x) => x.name)[0], b.publish_date].filter(Boolean).join(" · ");
+  const img = b.cover && (b.cover.medium || b.cover.small);
+  setCompareQuery(a, [b.title, authors.split(",")[0]].filter(Boolean).join(" "));
+  box.innerHTML = `<div class="product">
+      ${img ? `<img src="${esc(img)}" alt="" referrerpolicy="no-referrer">` : ""}
+      <div><div class="name">${esc(b.title || "Untitled")}</div>
+        ${authors ? `<div class="meta">${esc(authors)}</div>` : ""}
+        ${meta ? `<div class="meta">${esc(meta)}</div>` : ""}
+        <div class="meta">Book · ISBN ${esc(res.isbn)}</div></div>
+    </div>
+    <div class="src">From <a href="${esc(b.url || "https://openlibrary.org/isbn/" + res.isbn)}" target="_blank" rel="noopener noreferrer">Open Library</a></div>`;
+}
 
 /* ---------- price book ---------- */
 /* Shelf prices you type in, kept on this phone only, by barcode:
-   { "<code>": [{ id, cents, shop, at: "<ISO date>" }] } */
+   { "<code>": [{ id, cents, cur, shop, at: "<ISO date>" }] }
+   cur is "EUR" or "INR"; entries from before 1.1.2 have none and are euros.
+   Codes are the 13-digit GTIN (UPC-A with a leading 0), "label:<first 7 digits>"
+   for weighed items, or "pzn:<PZN>" for German medicines. */
 let editingPrice = false;
 const loadPrices = () => store.get("prices", {});
 const savePrices = (all) => store.set("prices", all);
-const money = (cents) => new Intl.NumberFormat(undefined, { style: "currency", currency: "EUR" }).format(cents / 100);
+const CUR_SIGN = { EUR: "€", INR: "₹" };
+/* Rupees in Indian style (₹1,29,999.00), euros the way the phone shows them. */
+const money = (cents, cur = "EUR") => {
+  try { return new Intl.NumberFormat(cur === "INR" ? "en-IN" : undefined, { style: "currency", currency: cur }).format(cents / 100); }
+  catch { return (cents / 100).toFixed(2) + " " + cur; }
+};
 function shortDate(iso) {
   const d = new Date(iso), sameYear = d.getFullYear() === new Date().getFullYear();
   return d.toLocaleDateString(undefined, sameYear ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", year: "numeric" });
 }
-/* Accepts "1,29", "1.29", "€ 1,29", "1.299,00". Returns cents, or null. */
+/* Accepts "1,29", "1.29", "€ 1,29", "1.299,00", "₹1,29,999.50". Returns cents, or null. */
 function parsePrice(s) {
   let t = String(s).replace(/[^\d.,]/g, "");
   if (!t) return null;
@@ -613,7 +925,7 @@ function parsePrice(s) {
   if (lastSep >= 0 && t.length - lastSep - 1 <= 2) t = t.slice(0, lastSep).replace(/[.,]/g, "") + "." + t.slice(lastSep + 1);
   else t = t.replace(/[.,]/g, "");
   const v = Math.round(parseFloat(t) * 100);
-  return v > 0 && v < 10000000 ? v : null;
+  return v > 0 && v < 1e11 ? v : null;
 }
 function knownShops() {
   const seen = new Map();
@@ -621,7 +933,7 @@ function knownShops() {
   return [...seen.values()].sort((a, b) => a.localeCompare(b));
 }
 
-const plainAmount = (cents) => new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).format(cents / 100);
+const plainAmount = (cents, cur) => new Intl.NumberFormat(cur === "INR" ? "en-IN" : undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).format(cents / 100);
 
 /* ---------- weighed-item labels ---------- */
 /* EAN-13s starting with 2 are a shop's own numbers, printed by the scales at the
@@ -652,12 +964,15 @@ function readStoreLabel(code) {
   return { sure: false, cents: five || null, grams: five || null, item: code.slice(2, 7), key: "label:" + code.slice(0, 7) };
 }
 function labelCard(l) {
+  /* The barcode holds a number, not a currency: it's the money of the country you shop in. */
+  const cur = homeCur();
+  const indiaNote = country === "IN" ? ` Indian shops' label layouts vary, so check it against the printed label.` : "";
   if (l.sure) {
     return `<div class="card label">
       <div class="lt">Price on label</div>
-      <div class="lp">${money(l.cents)}</div>
+      <div class="lp">${money(l.cents, cur)}</div>
       <div class="muted">Read from the barcode itself, no internet needed. Its price-check digit is correct.
-        This is a shop's own label code (item ${esc(l.item)}), so there is no product lookup.</div>
+        This is a shop's own label code (item ${esc(l.item)}), so there is no product lookup.${indiaNote}</div>
       <div class="row"><button class="btn go" id="labelSave">Save to price book</button></div>
     </div>`;
   }
@@ -665,31 +980,41 @@ function labelCard(l) {
     <div class="lt">Shop label code</div>
     <div class="muted">This is a shop's own code from a weighed or priced item, so there is no product lookup.
       Shops use different layouts, and this code doesn't carry the usual price-check digit, so the price can't be read for sure.
-      ${l.cents ? `If this shop puts the price at the end it would be <b>${money(l.cents)}</b>; if it puts the weight there it would be <b>${(l.grams / 1000).toLocaleString(undefined, { minimumFractionDigits: 3 })} kg</b>. Compare with the printed label.` : ""}</div>
+      ${l.cents ? `If this shop puts the price at the end it would be <b>${money(l.cents, cur)}</b>; if it puts the weight there it would be <b>${(l.grams / 1000).toLocaleString(undefined, { minimumFractionDigits: 3 })} kg</b>. Compare with the printed label.` : ""}</div>
   </div>`;
 }
 
-function renderPrices(key, editId, prefillCents) {
+function renderPrices(key, editId, prefillCents, mrpNote) {
   const box = $("prices");
   if (!box) return;
+  if (mrpNote !== undefined) box.dataset.mrp = mrpNote ? "1" : "";
   const list = (loadPrices()[key] || []).slice().sort((a, b) => b.at.localeCompare(a.at));
-  const low = list.length > 1 ? Math.min(...list.map((e) => e.cents)) : null;
+  const curOf = (e) => e.cur || "EUR";
+  /* "lowest" only compares like with like: prices in the same currency. */
+  const sameCur = list.every((e) => curOf(e) === curOf(list[0]));
+  const low = list.length > 1 && sameCur ? Math.min(...list.map((e) => e.cents)) : null;
   const editing = editId !== undefined;
   editingPrice = editing;
   const entry = editing && editId ? list.find((e) => e.id === editId) : null;
+  const formCur = entry ? curOf(entry) : homeCur();
+  const eg = formCur === "INR" ? "129.50" : "1,29";
   let html = `<div class="ph"><span class="pt">Price book</span>${!editing ? `<button class="btn small" id="addPrice">+ Add price</button>` : ""}</div>`;
+  if (box.dataset.mrp && !list.length && !editing) html += `<div class="muted small mrp">In India the MRP is printed on the pack, not stored in the barcode. Add it here to keep track of it.</div>`;
   if (editing) {
     html += `<form id="priceForm" class="pform" autocomplete="off">
-      <label>Price (€)<input id="pfPrice" inputmode="decimal" placeholder="1,29" value="${entry ? plainAmount(entry.cents) : prefillCents ? plainAmount(prefillCents) : ""}" required></label>
-      <label><span>Shop (optional)</span><input id="pfShop" list="shopList" placeholder="REWE, Lidl…" value="${entry ? esc(entry.shop || "") : ""}"></label>
+      <div class="prow">
+        <label class="grow">Price<input id="pfPrice" inputmode="decimal" placeholder="${eg}" value="${entry ? plainAmount(entry.cents, formCur) : prefillCents ? plainAmount(prefillCents, formCur) : ""}" required></label>
+        <label>Currency<select id="pfCur">${Object.keys(CUR_SIGN).map((c) => `<option value="${c}"${c === formCur ? " selected" : ""}>${CUR_SIGN[c]} ${c}</option>`).join("")}</select></label>
+      </div>
+      <label><span>Shop (optional)</span><input id="pfShop" list="shopList" placeholder="${country === "IN" ? "DMart, Reliance…" : "REWE, Lidl…"}" value="${entry ? esc(entry.shop || "") : ""}"></label>
       <datalist id="shopList">${knownShops().map((s) => `<option value="${esc(s)}">`).join("")}</datalist>
       <div class="row"><button class="btn go" type="submit">Save</button><button class="btn" type="button" id="pfCancel">Cancel</button></div>
-      <div class="err" id="pfErr" hidden>Enter a price, for example 1,29</div>
+      <div class="err" id="pfErr" hidden>Enter a price, for example ${eg}</div>
     </form>`;
   }
   if (list.length) {
     html += `<ul class="plist">${list.map((e) => `<li${e.id === editId ? ' class="being-edited"' : ""}>
-        <span class="pv">${money(e.cents)}</span>
+        <span class="pv">${money(e.cents, curOf(e))}</span>
         <span class="pm">${e.shop ? "at " + esc(e.shop) + ", " : ""}${esc(shortDate(e.at))}${e.cents === low ? ' <span class="low">lowest</span>' : ""}</span>
         <button class="lnk" data-edit="${e.id}">Edit</button><button class="lnk del" data-del="${e.id}">Delete</button>
       </li>`).join("")}</ul>`;
@@ -702,7 +1027,7 @@ function renderPrices(key, editId, prefillCents) {
   box.querySelectorAll("[data-edit]").forEach((b) => b.onclick = () => renderPrices(key, b.dataset.edit));
   box.querySelectorAll("[data-del]").forEach((b) => b.onclick = () => {
     const e = list.find((x) => x.id === b.dataset.del);
-    if (!e || !confirm(`Delete ${money(e.cents)}${e.shop ? " at " + e.shop : ""}?`)) return;
+    if (!e || !confirm(`Delete ${money(e.cents, curOf(e))}${e.shop ? " at " + e.shop : ""}?`)) return;
     const all = loadPrices();
     all[key] = (all[key] || []).filter((x) => x.id !== e.id);
     if (!all[key].length) delete all[key];
@@ -718,10 +1043,11 @@ function renderPrices(key, editId, prefillCents) {
       const cents = parsePrice($("pfPrice").value);
       if (cents === null) { $("pfErr").hidden = false; return; }
       const shop = $("pfShop").value.trim().slice(0, 40);
+      const cur = $("pfCur").value;
       const all = loadPrices();
       const arr = all[key] || [];
-      if (entry) Object.assign(arr.find((x) => x.id === entry.id), { cents, shop });
-      else arr.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), cents, shop, at: new Date().toISOString() });
+      if (entry) Object.assign(arr.find((x) => x.id === entry.id), { cents, cur, shop });
+      else arr.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), cents, cur, shop, at: new Date().toISOString() });
       all[key] = arr;
       savePrices(all);
       renderPrices(key);
@@ -810,6 +1136,19 @@ async function loadNotes() {
     box.className = "muted"; box.textContent = "Release notes need a connection.";
   }
 }
+function syncCountry() {
+  document.querySelectorAll("[data-country]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.country === country)));
+}
+document.querySelectorAll("[data-country]").forEach((b) => b.onclick = () => {
+  country = b.dataset.country;
+  store.set("country", country);
+  syncCountry();
+  /* Show the open result again with the new country's buttons and currency. */
+  if (lastShown) showResult(lastShown[0], lastShown[1]);
+  toast("Shopping in " + COUNTRIES[country].name);
+});
+syncCountry();
+
 function openAbout() {
   $("abRunning").textContent = APP_VERSION;
   $("abBuilt").textContent = APP_BUILT;

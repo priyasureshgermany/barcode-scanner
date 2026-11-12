@@ -18,7 +18,7 @@ ZXingWASM.prepareZXingModule({
    makes each frame faster and cuts down on false reads from random textures. */
 const FORMATS = [
   "EAN13", "EAN8", "UPCA", "UPCE",
-  "Code128", "Code39", "Code93", "ITF", "Codabar", "DataBar", "DataBarExp",
+  "Code128", "Code39", "PZN", "Code93", "ITF", "Codabar", "DataBar", "DataBarLtd", "DataBarExp",
   "QRCode", "MicroQRCode", "DataMatrix", "PDF417", "Aztec"
 ];
 
@@ -38,7 +38,9 @@ self.onmessage = async (e) => {
       results: results.filter((r) => r.isValid).map((r) => ({
         text: r.text,
         format: r.format,
-        contentType: r.contentType
+        /* "GS1" / "ISO15434" and ]C1, ]d2… tell GS1 and pharma codes apart from plain text */
+        contentType: r.contentType,
+        symbologyIdentifier: r.symbologyIdentifier
       }))
     });
   } catch (err) {

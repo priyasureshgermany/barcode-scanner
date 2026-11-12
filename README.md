@@ -21,6 +21,21 @@ Single `index.html`, no build step, works offline once opened (except product lo
   item number so every pack of that item shares one list. When it doesn't, the app says the
   layout can't be read for sure and shows both readings (price or weight) to compare with
   the printed label. These codes are never sent to Open Food Facts.
+- **Germany and India:** under About, choose where you shop. That sets the currency (€ or ₹)
+  for new prices and weighed-item labels, and the shopping buttons: idealo in Germany,
+  Google Shopping and Amazon.in in India (both when the code comes from the other country).
+  Each product shows which GS1 country issued its code (Germany 400–440, India 890).
+  In India the MRP is printed on the pack, not in the barcode, so the price book suggests
+  adding it.
+- **Books** (ISBN 978/979) are looked up in Open Library. Magazines (977) and shops' own
+  short codes are recognised and not looked up.
+- **Medicines:** German packs' securPharm Data Matrix (both the GS1/NTIN and the IFA layout)
+  and the older PZN Code 39 barcode, plus the GS1 Data Matrix used on Indian and export
+  medicines, are shown as PZN / product code, batch, expiry date and serial, with a warning
+  when the pack has expired or expires within 90 days.
+- **GS1 data:** GS1-128 and ITF-14 on cartons, GS1 DataBar, GS1 QR codes and GS1 Digital
+  Link QR codes (`…/01/<GTIN>/…`, from id.gs1.org or a brand's own site) are decoded into
+  readable fields, and the product inside is looked up like a normal barcode.
 - “Scan a photo” reads a code from a photo or screenshot, for when the camera can't be used.
 - QR codes that are web links get an “Open link” button. Links never open by themselves.
 
