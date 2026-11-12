@@ -26,7 +26,7 @@
   body { min-height: 100dvh; display: flex; flex-direction: column;
     padding: var(--safe-top) 0 var(--safe-bot); }
   header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
-  header h1 { font-size: 18px; font-weight: 650; margin: 0; flex: 1; }
+  header h1 { font-size: 18px; font-weight: 650; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .iconbtn { background: var(--panel2); color: var(--text); border: 1px solid var(--line);
     border-radius: 999px; height: 36px; min-width: 36px; padding: 0 12px; font-size: 14px;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
@@ -111,6 +111,36 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .err { color: var(--err); }
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 0 16px 16px; margin-top: auto; }
+  .iconbtn.upd { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 650; }
+  #aboutBtn { position: relative; }
+  .dot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--warn); }
+  footer .lnk { font-size: 12px; color: var(--muted); text-decoration: underline; }
+  dialog#about { width: min(560px, calc(100% - 24px)); max-height: calc(100dvh - 40px); border: 1px solid var(--line);
+    border-radius: 18px; background: var(--bg); color: var(--text); padding: 14px 16px 20px; overflow: auto; }
+  dialog#about::backdrop { background: rgba(0,0,0,.6); }
+  .dh { display: flex; align-items: center; justify-content: space-between; }
+  .dh h2 { margin: 0; font-size: 18px; }
+  #about h3 { font-size: 15px; margin: 18px 0 6px; }
+  .vbox { display: grid; gap: 8px; margin-top: 12px; }
+  .vrow { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+  .small { font-size: 12px; }
+  #abCheck { justify-self: start; }
+  .rel { border-top: 1px solid var(--line); padding: 10px 0; }
+  .rel-h { display: flex; gap: 8px; align-items: baseline; color: var(--text); }
+  .rel-v { font-weight: 700; }
+  .rel-v.current::after { content: " · you're on this"; font-weight: 400; color: var(--accent); font-size: 12px; }
+  .rel-d { font-size: 12px; color: var(--muted); }
+  .rel ul { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  .rel li { display: flex; gap: 8px; color: var(--text); font-size: 14px; }
+  .kind { flex: none; font-size: 11px; font-weight: 700; border-radius: 5px; padding: 1px 6px; height: fit-content; margin-top: 1px; }
+  .kind.new { background: #12372f; color: #5ee0c3; }
+  .kind.fix { background: #3a2a14; color: #ffc46b; }
+  .kind.better { background: #1f2a44; color: #8fb3ff; }
+  .label .lt { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .label .lp { font-size: 32px; font-weight: 700; margin: 2px 0 6px; font-variant-numeric: tabular-nums; }
+  .label .muted b { color: var(--text); }
+  .label.unsure { border-color: #5a4a22; }
+  .label.unsure .lt { color: var(--warn); }
   #toast { position: fixed; left: 50%; bottom: calc(24px + var(--safe-bot)); transform: translateX(-50%) translateY(20px);
     background: #fff; color: #111; padding: 9px 16px; border-radius: 999px; font-size: 14px; opacity: 0;
     transition: .2s; pointer-events: none; }
@@ -121,6 +151,11 @@
 <body>
 <header>
   <h1>Barcode Scanner</h1>
+  <button class="iconbtn upd" id="updBadge" hidden>Update available</button>
+  <button class="iconbtn" id="aboutBtn" title="Version and what's new">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>
+    <span class="sr">About</span><i class="dot" id="aboutDot" hidden></i>
+  </button>
   <button class="iconbtn" id="soundBtn" aria-pressed="false" title="Beep on scan">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path id="soundWave" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>
     <span class="sr">Sound</span>
@@ -151,13 +186,29 @@
   <div class="card empty" id="placeholder">The scanned code, its type and any product details will show up here.</div>
 </main>
 
-<footer>v<span id="ver">1.1.0</span> · Product data from the Open Food Facts databases</footer>
+<footer><button class="lnk" id="verLink">Version <span id="ver"></span></button> · Product data from the Open Food Facts databases</footer>
+
+<dialog id="about">
+  <div class="dh"><h2>About</h2><button class="iconbtn" id="aboutClose" aria-label="Close">✕</button></div>
+  <div class="card vbox">
+    <div class="vrow"><span class="muted">Running</span><b id="abRunning"></b></div>
+    <div class="vrow"><span class="muted">Released</span><span id="abBuilt"></span></div>
+    <div class="vrow"><span class="muted">On the website</span><span id="abLive">checking…</span></div>
+    <button class="primary" id="abUpdate" hidden>Update now</button>
+    <div class="muted small" id="abNote">Updates only happen when you tap Update now. Your saved prices are kept.</div>
+    <button class="btn" id="abCheck">Check again</button>
+  </div>
+  <h3>What's new</h3>
+  <div id="notes" class="muted">Loading…</div>
+</dialog>
 <div id="toast" role="status"></div>
 
 <script>
 "use strict";
-const VERSION = "1.1.0";
-document.getElementById("ver").textContent = VERSION;
+/* Both written by tools/bump-version.mjs; don't edit by hand. */
+const APP_VERSION = "1.1.1";
+const APP_BUILT = "2026-11-12";
+document.getElementById("ver").textContent = APP_VERSION;
 
 const $ = (id) => document.getElementById(id);
 const stage = $("stage"), video = $("video"), out = $("out");
@@ -420,7 +471,10 @@ function showResult(r, others) {
   const text = r.text;
   const isUrl = /^https?:\/\/\S+$/i.test(text.trim());
   const long = text.length > 40;
-  const isProduct = isRetail(r.format) && /^\d{6,14}$/.test(text);
+  const label = norm(r.format) === "EAN13" ? readStoreLabel(text) : null;
+  /* Shop label codes mean nothing outside that shop, so they are never looked up. */
+  const isProduct = !label && isRetail(r.format) && /^\d{6,14}$/.test(text);
+  const priceKey = label ? label.key : gtinFor(r);
   editingPrice = false;
   let html = `<div class="card" id="resCard">
     <span class="fmt">${esc(fmtName(r.format))}</span>
@@ -436,10 +490,15 @@ function showResult(r, others) {
       `<button class="btn" data-other="${i}">${esc(fmtName(o.format))}: ${esc(o.text.slice(0, 24))}${o.text.length > 24 ? "…" : ""}</button>`).join("")}</div>`;
   }
   html += `</div>`;
+  if (label) html += labelCard(label);
   if (isProduct) html += `<div class="card" id="lookup"><span class="spinner"></span><span class="muted">Looking up product…</span></div>`;
   if (!isUrl) html += `<div class="card" id="prices"></div>`;
   out.innerHTML = html;
-  if (!isUrl) renderPrices(gtinFor(r));
+  if (!isUrl) renderPrices(priceKey);
+  if ($("labelSave")) $("labelSave").onclick = () => {
+    renderPrices(priceKey, null, label.cents);
+    $("prices").scrollIntoView({ behavior: "smooth", block: "center" });
+  };
   $("copyBtn").onclick = async () => {
     try { await navigator.clipboard.writeText(text); toast("Copied"); }
     catch { toast("Copy failed"); }
@@ -562,7 +621,55 @@ function knownShops() {
   return [...seen.values()].sort((a, b) => a.localeCompare(b));
 }
 
-function renderPrices(key, editId) {
+const plainAmount = (cents) => new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).format(cents / 100);
+
+/* ---------- weighed-item labels ---------- */
+/* EAN-13s starting with 2 are a shop's own numbers, printed by the scales at the
+   deli counter, fruit and veg, cheese and so on. Each shop chooses the layout.
+   The common German one, and the only one that can be checked, is
+     2 X | A A A A A | P | V V V V | C
+   (prefix, 5-digit item number, price-check digit, price in cents, EAN check digit).
+   When the price-check digit matches, the price is certain. When it doesn't, the
+   code most likely uses
+     2 X | A A A A A | V V V V V | C
+   where the last five digits are a price in cents OR a weight in grams, and only
+   the printed label can tell which. That case is shown as a guess, never as fact. */
+const W2M = [0, 2, 4, 6, 8, 9, 1, 3, 5, 7];   /* weighting factor 2-  */
+const W3  = [0, 3, 6, 9, 2, 5, 8, 1, 4, 7];   /* weighting factor 3   */
+const W5M = [0, 5, 9, 4, 8, 3, 7, 2, 6, 1];   /* weighting factor 5-  */
+function priceCheckDigit(four) {
+  const d = [...four].map(Number);
+  const sum = W2M[d[0]] + W2M[d[1]] + W3[d[2]] + W5M[d[3]];
+  return (sum * 3) % 10;
+}
+function readStoreLabel(code) {
+  if (!/^2\d{12}$/.test(code)) return null;
+  const four = code.slice(8, 12);
+  if (+code[7] === priceCheckDigit(four) && +four > 0) {
+    return { sure: true, cents: +four, item: code.slice(2, 7), key: "label:" + code.slice(0, 7) };
+  }
+  const five = +code.slice(7, 12);
+  return { sure: false, cents: five || null, grams: five || null, item: code.slice(2, 7), key: "label:" + code.slice(0, 7) };
+}
+function labelCard(l) {
+  if (l.sure) {
+    return `<div class="card label">
+      <div class="lt">Price on label</div>
+      <div class="lp">${money(l.cents)}</div>
+      <div class="muted">Read from the barcode itself, no internet needed. Its price-check digit is correct.
+        This is a shop's own label code (item ${esc(l.item)}), so there is no product lookup.</div>
+      <div class="row"><button class="btn go" id="labelSave">Save to price book</button></div>
+    </div>`;
+  }
+  return `<div class="card label unsure">
+    <div class="lt">Shop label code</div>
+    <div class="muted">This is a shop's own code from a weighed or priced item, so there is no product lookup.
+      Shops use different layouts, and this code doesn't carry the usual price-check digit, so the price can't be read for sure.
+      ${l.cents ? `If this shop puts the price at the end it would be <b>${money(l.cents)}</b>; if it puts the weight there it would be <b>${(l.grams / 1000).toLocaleString(undefined, { minimumFractionDigits: 3 })} kg</b>. Compare with the printed label.` : ""}</div>
+  </div>`;
+}
+
+function renderPrices(key, editId, prefillCents) {
   const box = $("prices");
   if (!box) return;
   const list = (loadPrices()[key] || []).slice().sort((a, b) => b.at.localeCompare(a.at));
@@ -573,7 +680,7 @@ function renderPrices(key, editId) {
   let html = `<div class="ph"><span class="pt">Price book</span>${!editing ? `<button class="btn small" id="addPrice">+ Add price</button>` : ""}</div>`;
   if (editing) {
     html += `<form id="priceForm" class="pform" autocomplete="off">
-      <label>Price (€)<input id="pfPrice" inputmode="decimal" placeholder="1,29" value="${entry ? esc(new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).format(entry.cents / 100)) : ""}" required></label>
+      <label>Price (€)<input id="pfPrice" inputmode="decimal" placeholder="1,29" value="${entry ? plainAmount(entry.cents) : prefillCents ? plainAmount(prefillCents) : ""}" required></label>
       <label><span>Shop (optional)</span><input id="pfShop" list="shopList" placeholder="REWE, Lidl…" value="${entry ? esc(entry.shop || "") : ""}"></label>
       <datalist id="shopList">${knownShops().map((s) => `<option value="${esc(s)}">`).join("")}</datalist>
       <div class="row"><button class="btn go" type="submit">Save</button><button class="btn" type="button" id="pfCancel">Cancel</button></div>
@@ -631,7 +738,96 @@ if (!window.isSecureContext || !navigator.mediaDevices) {
   startCamera();
 }
 
-if ("serviceWorker" in navigator && location.protocol === "https:") {
+/* ---------- updates and versions ---------- */
+/* The app on this phone stays on its version until you tap Update now (see
+   sw.js). This only asks the website which version it has, past every cache. */
+let liveVersion = "", lastCheck = 0;
+const newer = (a, b) => {
+  const x = a.split(".").map(Number), y = b.split(".").map(Number);
+  for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+  return false;
+};
+async function checkForUpdate(force) {
+  if (!force && Date.now() - lastCheck < 60000) return liveVersion;
+  lastCheck = Date.now();
+  try {
+    const res = await fetch("version.json?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    const v = String((await res.json()).version || "");
+    liveVersion = v && newer(v, APP_VERSION) ? v : "";
+    $("abLive").textContent = v ? (liveVersion ? v + " (newer)" : v + " · up to date") : "unknown";
+  } catch {
+    $("abLive").textContent = navigator.onLine ? "couldn't check" : "offline";
+  }
+  showUpdate();
+  return liveVersion;
+}
+function showUpdate() {
+  $("updBadge").hidden = !liveVersion;
+  $("aboutDot").hidden = !liveVersion;
+  $("abUpdate").hidden = !liveVersion;
+  $("abUpdate").textContent = liveVersion ? "Update now to " + liveVersion : "Update now";
+}
+async function updateNow() {
+  const b = $("abUpdate");
+  b.disabled = true; b.textContent = "Updating…";
+  /* Empty the cached copy so the reload fetches the new version from the website. */
+  try {
+    if ("caches" in window) await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
+    if (navigator.serviceWorker) await Promise.all((await navigator.serviceWorker.getRegistrations()).map((r) => r.update().catch(() => {})));
+  } catch {}
+  location.reload();
+}
+
+/* "## 1.2.3 — 2026-11-12" then "- new: …" / "- fix: …" / "- better: …" */
+function parseReleases(md) {
+  const outList = [];
+  String(md).split(/\r?\n/).forEach((line) => {
+    const h = line.match(/^##\s+(\S+)\s*—\s*(.+?)\s*$/);
+    if (h) { outList.push({ version: h[1], date: h[2], items: [] }); return; }
+    const li = line.match(/^-\s+(.+?)\s*$/);
+    if (!li || !outList.length) return;
+    const k = li[1].match(/^(fix|new|better):\s*(.+)$/);
+    outList[outList.length - 1].items.push(k ? { kind: k[1], text: k[2] } : { kind: "better", text: li[1] });
+  });
+  return outList;
+}
+const KIND_LABEL = { new: "New", fix: "Fix", better: "Better" };
+async function loadNotes() {
+  const box = $("notes");
+  try {
+    /* The live notes, so an available update shows what it brings. */
+    let res = await fetch("RELEASES.md?t=" + Date.now(), { cache: "no-store" }).catch(() => null);
+    if (!res || !res.ok) res = await caches.match("./RELEASES.md");
+    if (!res || !res.ok) throw new Error();
+    const rels = parseReleases(await res.text());
+    box.className = "";
+    box.innerHTML = rels.map((r) => `<div class="rel">
+      <div class="rel-h"><span class="rel-v${r.version === APP_VERSION ? " current" : ""}">${esc(r.version)}</span><span class="rel-d">${esc(r.date)}</span></div>
+      <ul>${r.items.map((i) => `<li><span class="kind ${i.kind}">${KIND_LABEL[i.kind]}</span><span>${esc(i.text)}</span></li>`).join("")}</ul>
+    </div>`).join("") || "No notes yet.";
+  } catch {
+    box.className = "muted"; box.textContent = "Release notes need a connection.";
+  }
+}
+function openAbout() {
+  $("abRunning").textContent = APP_VERSION;
+  $("abBuilt").textContent = APP_BUILT;
+  $("about").showModal();
+  checkForUpdate(true);
+  loadNotes();
+}
+$("aboutBtn").onclick = openAbout;
+$("verLink").onclick = openAbout;
+$("updBadge").onclick = openAbout;
+$("aboutClose").onclick = () => $("about").close();
+$("about").addEventListener("click", (e) => { if (e.target === $("about")) $("about").close(); });
+$("abUpdate").onclick = updateNow;
+$("abCheck").onclick = () => checkForUpdate(true);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkForUpdate(); });
+setTimeout(() => checkForUpdate(true), 1500);
+
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
 </script>

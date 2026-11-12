@@ -14,6 +14,13 @@ Single `index.html`, no build step, works offline once opened (except product lo
   lists them newest first, marks the lowest, and lets you edit or delete them.
 - **Compare prices** opens an idealo.de search for the product name, or for the barcode when
   no name was found.
+- **Weighed-item labels:** EAN-13s starting with 2 are a shop's own codes (deli, cheese,
+  fruit scales). In the usual German layout `2X AAAAA P VVVV C` the price is the 4 digits
+  before the last, guarded by a price-check digit `P`. When `P` checks out the app shows
+  “Price on label” (offline) and offers to save it to the price book, filed under the
+  item number so every pack of that item shares one list. When it doesn't, the app says the
+  layout can't be read for sure and shows both readings (price or weight) to compare with
+  the printed label. These codes are never sent to Open Food Facts.
 - “Scan a photo” reads a code from a photo or screenshot, for when the camera can't be used.
 - QR codes that are web links get an “Open link” button. Links never open by themselves.
 
@@ -29,8 +36,21 @@ GS1 DataBar, QR, Micro QR, Data Matrix, PDF417, Aztec.
   `BarcodeDetector`, which is why the app brings its own decoder.
 - Only the part of the picture inside the frame is decoded, which is faster and avoids
   picking up other codes nearby.
-- `sw.js` caches the app for offline use. Bump `VERSION` in both `sw.js` and `index.html`
-  when releasing so phones pick up the new files.
+- `sw.js` keeps one copy of the app for offline use and never replaces it by itself. The app
+  checks `version.json` on the website; when it's newer, an **Update available** badge shows,
+  and **Update now** (under About) clears the copy and reloads onto the new version. About also
+  shows the running version and What's new, read from `RELEASES.md`.
+
+## Releasing
+
+Same as the expense tracker. Run once per release, with one line per change:
+
+```
+node tools/bump-version.mjs --new "…" --fix "…" --better "…"
+```
+
+It sets the version in `index.html`, `sw.js` and `version.json` and adds the notes to
+`RELEASES.md`. Phones see the badge once the release is pushed.
 
 ## On iPhone (Chrome or Safari)
 
