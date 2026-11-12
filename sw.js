@@ -1,7 +1,7 @@
 /* Offline support. Everything the scanner needs is cached on install, so it
    opens and decodes with no connection; only product lookups need the network.
    Bump VERSION with every release so phones pick up the new files. */
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const CACHE = "barcode-scanner-" + VERSION;
 const FILES = [
   "./",

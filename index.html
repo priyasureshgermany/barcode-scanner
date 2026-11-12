@@ -87,6 +87,24 @@
   .muted { color: var(--muted); font-size: 14px; }
   .src { color: var(--muted); font-size: 12px; margin-top: 8px; }
   .src a { color: var(--accent); }
+  .ph { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .pt { font-weight: 650; }
+  .btn.small { padding: 6px 12px; font-size: 13px; }
+  .plist { list-style: none; margin: 0; padding: 0; }
+  .plist li { display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .plist li:first-child { border-top: 0; }
+  .plist li.being-edited { opacity: .45; }
+  .pv { font-weight: 650; font-variant-numeric: tabular-nums; min-width: 64px; }
+  .pm { color: var(--muted); font-size: 14px; flex: 1; }
+  .low { color: var(--hit); font-size: 12px; font-weight: 600; margin-left: 4px; }
+  .lnk { background: none; border: 0; color: var(--accent); font-size: 14px; padding: 4px 2px; cursor: pointer; }
+  .lnk.del { color: var(--err); }
+  .pform { display: grid; gap: 10px; margin-bottom: 10px; }
+  .pform label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  /* 16px stops iPhone zooming into the field when it gets focus */
+  .pform input { font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--panel2); color: var(--text); width: 100%; }
+  .pform input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
   .others button { margin: 6px 6px 0 0; }
   .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line);
     border-top-color: var(--accent); animation: spin .8s linear infinite; display: inline-block; vertical-align: -3px; margin-right: 8px; }
@@ -133,12 +151,12 @@
   <div class="card empty" id="placeholder">The scanned code, its type and any product details will show up here.</div>
 </main>
 
-<footer>v<span id="ver">1.0.0</span> · Product data from the Open Food Facts databases</footer>
+<footer>v<span id="ver">1.1.0</span> · Product data from the Open Food Facts databases</footer>
 <div id="toast" role="status"></div>
 
 <script>
 "use strict";
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 document.getElementById("ver").textContent = VERSION;
 
 const $ = (id) => document.getElementById(id);
@@ -342,6 +360,8 @@ async function loop() {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function onHit(r) {
+  /* Don't swap the result out from under you while you're typing a price. */
+  if (editingPrice) return;
   beep();
   stage.classList.add("hit");
   setTimeout(() => stage.classList.remove("hit"), 450);
@@ -400,6 +420,8 @@ function showResult(r, others) {
   const text = r.text;
   const isUrl = /^https?:\/\/\S+$/i.test(text.trim());
   const long = text.length > 40;
+  const isProduct = isRetail(r.format) && /^\d{6,14}$/.test(text);
+  editingPrice = false;
   let html = `<div class="card" id="resCard">
     <span class="fmt">${esc(fmtName(r.format))}</span>
     <div class="code${long ? " long" : ""}">${esc(text)}</div>
@@ -407,14 +429,17 @@ function showResult(r, others) {
       <button class="btn" id="copyBtn">Copy</button>
       ${isUrl ? `<a class="btn go" href="${esc(text.trim())}" target="_blank" rel="noopener noreferrer">Open link</a>` : ""}
       ${!isUrl ? `<a class="btn" href="https://www.google.com/search?q=${encodeURIComponent(text)}" target="_blank" rel="noopener noreferrer">Search the web</a>` : ""}
+      ${isProduct ? `<a class="btn" id="idealoBtn" href="${idealoUrl(text)}" target="_blank" rel="noopener noreferrer">Compare prices</a>` : ""}
     </div>`;
   if (others && others.length) {
     html += `<div class="others muted" style="margin-top:12px">Also in the photo:<br>${others.map((o, i) =>
       `<button class="btn" data-other="${i}">${esc(fmtName(o.format))}: ${esc(o.text.slice(0, 24))}${o.text.length > 24 ? "…" : ""}</button>`).join("")}</div>`;
   }
   html += `</div>`;
-  if (isRetail(r.format) && /^\d{6,14}$/.test(text)) html += `<div class="card" id="lookup"><span class="spinner"></span><span class="muted">Looking up product…</span></div>`;
+  if (isProduct) html += `<div class="card" id="lookup"><span class="spinner"></span><span class="muted">Looking up product…</span></div>`;
+  if (!isUrl) html += `<div class="card" id="prices"></div>`;
   out.innerHTML = html;
+  if (!isUrl) renderPrices(gtinFor(r));
   $("copyBtn").onclick = async () => {
     try { await navigator.clipboard.writeText(text); toast("Copied"); }
     catch { toast("Copy failed"); }
@@ -487,7 +512,14 @@ function renderLookup(res, r) {
     return;
   }
   const p = res.product;
-  const name = p.product_name || p.product_name_en || p.generic_name || "Unnamed product";
+  const realName = p.product_name || p.product_name_en || p.generic_name || "";
+  const name = realName || "Unnamed product";
+  if (realName && $("idealoBtn")) {
+    /* Search by brand + name; idealo knows few barcodes but most product names. */
+    const brand = (p.brands || "").split(",")[0].trim();
+    const q = brand && !realName.toLowerCase().includes(brand.toLowerCase()) ? brand + " " + realName : realName;
+    $("idealoBtn").href = idealoUrl(q);
+  }
   const img = p.image_front_small_url || p.image_small_url;
   const meta = [p.brands, p.quantity].filter(Boolean).join(" · ");
   const cat = (p.categories || "").split(",").map((s) => s.trim().replace(/^[a-z]{2}:/, "")).filter(Boolean).slice(-1)[0];
@@ -498,6 +530,97 @@ function renderLookup(res, r) {
         ${cat ? `<div class="meta">${esc(cat)}</div>` : ""}</div>
     </div>
     <div class="src">From <a href="https://${res.source.host}/product/${encodeURIComponent(res.code)}" target="_blank" rel="noopener noreferrer">${esc(res.source.name)}</a></div>`;
+}
+
+/* ---------- compare prices ---------- */
+const idealoUrl = (q) => "https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=" + encodeURIComponent(q);
+
+/* ---------- price book ---------- */
+/* Shelf prices you type in, kept on this phone only, by barcode:
+   { "<code>": [{ id, cents, shop, at: "<ISO date>" }] } */
+let editingPrice = false;
+const loadPrices = () => store.get("prices", {});
+const savePrices = (all) => store.set("prices", all);
+const money = (cents) => new Intl.NumberFormat(undefined, { style: "currency", currency: "EUR" }).format(cents / 100);
+function shortDate(iso) {
+  const d = new Date(iso), sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString(undefined, sameYear ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", year: "numeric" });
+}
+/* Accepts "1,29", "1.29", "€ 1,29", "1.299,00". Returns cents, or null. */
+function parsePrice(s) {
+  let t = String(s).replace(/[^\d.,]/g, "");
+  if (!t) return null;
+  const lastSep = Math.max(t.lastIndexOf(","), t.lastIndexOf("."));
+  if (lastSep >= 0 && t.length - lastSep - 1 <= 2) t = t.slice(0, lastSep).replace(/[.,]/g, "") + "." + t.slice(lastSep + 1);
+  else t = t.replace(/[.,]/g, "");
+  const v = Math.round(parseFloat(t) * 100);
+  return v > 0 && v < 10000000 ? v : null;
+}
+function knownShops() {
+  const seen = new Map();
+  for (const list of Object.values(loadPrices())) for (const e of list) if (e.shop) seen.set(e.shop.toLowerCase(), e.shop);
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+
+function renderPrices(key, editId) {
+  const box = $("prices");
+  if (!box) return;
+  const list = (loadPrices()[key] || []).slice().sort((a, b) => b.at.localeCompare(a.at));
+  const low = list.length > 1 ? Math.min(...list.map((e) => e.cents)) : null;
+  const editing = editId !== undefined;
+  editingPrice = editing;
+  const entry = editing && editId ? list.find((e) => e.id === editId) : null;
+  let html = `<div class="ph"><span class="pt">Price book</span>${!editing ? `<button class="btn small" id="addPrice">+ Add price</button>` : ""}</div>`;
+  if (editing) {
+    html += `<form id="priceForm" class="pform" autocomplete="off">
+      <label>Price (€)<input id="pfPrice" inputmode="decimal" placeholder="1,29" value="${entry ? esc(new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).format(entry.cents / 100)) : ""}" required></label>
+      <label><span>Shop (optional)</span><input id="pfShop" list="shopList" placeholder="REWE, Lidl…" value="${entry ? esc(entry.shop || "") : ""}"></label>
+      <datalist id="shopList">${knownShops().map((s) => `<option value="${esc(s)}">`).join("")}</datalist>
+      <div class="row"><button class="btn go" type="submit">Save</button><button class="btn" type="button" id="pfCancel">Cancel</button></div>
+      <div class="err" id="pfErr" hidden>Enter a price, for example 1,29</div>
+    </form>`;
+  }
+  if (list.length) {
+    html += `<ul class="plist">${list.map((e) => `<li${e.id === editId ? ' class="being-edited"' : ""}>
+        <span class="pv">${money(e.cents)}</span>
+        <span class="pm">${e.shop ? "at " + esc(e.shop) + ", " : ""}${esc(shortDate(e.at))}${e.cents === low ? ' <span class="low">lowest</span>' : ""}</span>
+        <button class="lnk" data-edit="${e.id}">Edit</button><button class="lnk del" data-del="${e.id}">Delete</button>
+      </li>`).join("")}</ul>`;
+  } else if (!editing) {
+    html += `<div class="muted">No prices saved for this code yet.</div>`;
+  }
+  box.innerHTML = html;
+
+  if ($("addPrice")) $("addPrice").onclick = () => renderPrices(key, null);
+  box.querySelectorAll("[data-edit]").forEach((b) => b.onclick = () => renderPrices(key, b.dataset.edit));
+  box.querySelectorAll("[data-del]").forEach((b) => b.onclick = () => {
+    const e = list.find((x) => x.id === b.dataset.del);
+    if (!e || !confirm(`Delete ${money(e.cents)}${e.shop ? " at " + e.shop : ""}?`)) return;
+    const all = loadPrices();
+    all[key] = (all[key] || []).filter((x) => x.id !== e.id);
+    if (!all[key].length) delete all[key];
+    savePrices(all);
+    renderPrices(key);
+    toast("Price deleted");
+  });
+  if (editing) {
+    $("pfPrice").focus();
+    $("pfCancel").onclick = () => renderPrices(key);
+    $("priceForm").onsubmit = (ev) => {
+      ev.preventDefault();
+      const cents = parsePrice($("pfPrice").value);
+      if (cents === null) { $("pfErr").hidden = false; return; }
+      const shop = $("pfShop").value.trim().slice(0, 40);
+      const all = loadPrices();
+      const arr = all[key] || [];
+      if (entry) Object.assign(arr.find((x) => x.id === entry.id), { cents, shop });
+      else arr.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), cents, shop, at: new Date().toISOString() });
+      all[key] = arr;
+      savePrices(all);
+      renderPrices(key);
+      toast(entry ? "Price updated" : "Price saved");
+    };
+  }
 }
 
 /* ---------- start-up ---------- */

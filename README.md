@@ -9,6 +9,11 @@ Single `index.html`, no build step, works offline once opened (except product lo
 - Beeps on a hit (and vibrates on Android) and shows the code and its type.
 - For product codes (EAN-13, EAN-8, UPC-A, UPC-E) it looks the product up in the
   free Open Food Facts databases: food, then beauty, pet food and general products.
+- **Price book:** after a scan you can save the shelf price, with an optional shop name.
+  Prices are kept on the phone only (browser storage) by barcode. Every later scan of that code
+  lists them newest first, marks the lowest, and lets you edit or delete them.
+- **Compare prices** opens an idealo.de search for the product name, or for the barcode when
+  no name was found.
 - “Scan a photo” reads a code from a photo or screenshot, for when the camera can't be used.
 - QR codes that are web links get an “Open link” button. Links never open by themselves.
 
