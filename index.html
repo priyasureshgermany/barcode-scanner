@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Scanner">
+<title>Barcode Scanner</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  :root {
+    --bg: #0e1116; --panel: #171b22; --panel2: #1f242d; --line: #2a303b;
+    --text: #e8ebf0; --muted: #9aa3b2; --accent: #2ec4b6; --accent-ink: #062b28;
+    --hit: #3ddc84; --warn: #ffb547; --err: #ff6b6b;
+    --safe-top: env(safe-area-inset-top, 0px); --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { min-height: 100dvh; display: flex; flex-direction: column;
+    padding: var(--safe-top) 0 var(--safe-bot); }
+  header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
+  header h1 { font-size: 18px; font-weight: 650; margin: 0; flex: 1; }
+  .iconbtn { background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 999px; height: 36px; min-width: 36px; padding: 0 12px; font-size: 14px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+  .iconbtn[aria-pressed="true"] { background: var(--warn); color: #241600; border-color: var(--warn); }
+  .iconbtn svg { width: 18px; height: 18px; }
+
+  /* viewfinder */
+  #stage { position: relative; margin: 0 16px; border-radius: 18px; overflow: hidden;
+    background: #000; aspect-ratio: 3 / 4; max-height: 58dvh; width: calc(100% - 32px); align-self: center; }
+  @media (min-width: 600px) { #stage { aspect-ratio: 4 / 3; max-width: 640px; } }
+  video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #frame { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 80%; height: 46%; border-radius: 14px;
+    box-shadow: 0 0 0 100vmax rgba(0,0,0,.45); transition: box-shadow .2s; pointer-events: none; }
+  #frame .c { position: absolute; width: 28px; height: 28px; border: 4px solid #fff; }
+  #frame .tl { left: -2px; top: -2px; border-right: 0; border-bottom: 0; border-top-left-radius: 14px; }
+  #frame .tr { right: -2px; top: -2px; border-left: 0; border-bottom: 0; border-top-right-radius: 14px; }
+  #frame .bl { left: -2px; bottom: -2px; border-right: 0; border-top: 0; border-bottom-left-radius: 14px; }
+  #frame .br { right: -2px; bottom: -2px; border-left: 0; border-top: 0; border-bottom-right-radius: 14px; }
+  #laser { position: absolute; left: 6%; right: 6%; height: 2px; top: 50%;
+    background: #ff5a64; box-shadow: 0 0 10px #ff5a64; animation: sweep 1.8s ease-in-out infinite alternate; }
+  @keyframes sweep { from { top: 12%; } to { top: 88%; } }
+  #stage:not(.running) #laser { display: none; }
+  #stage.hit #frame .c { border-color: var(--hit); }
+  #stage.hit #frame { box-shadow: 0 0 0 100vmax rgba(0,40,10,.45); }
+  #stage:not(.running) #frame { display: none; }
+  #idle { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 14px;
+    align-items: center; justify-content: center; padding: 24px; text-align: center; color: var(--muted); }
+  #stage.running #idle { display: none; }
+  #idle p { margin: 0; max-width: 300px; font-size: 14px; }
+  .primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 999px;
+    font-size: 17px; font-weight: 650; padding: 14px 26px; cursor: pointer; }
+  #hint { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; font-size: 13px;
+    color: #fff; text-shadow: 0 1px 3px #000; pointer-events: none; }
+  #stage:not(.running) #hint { display: none; }
+
+  .controls { display: flex; gap: 10px; justify-content: center; padding: 12px 16px 4px; flex-wrap: wrap; }
+
+  /* result */
+  main { padding: 8px 16px 24px; display: flex; flex-direction: column; gap: 12px;
+    width: 100%; max-width: 680px; align-self: center; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; }
+  .fmt { display: inline-block; font-size: 12px; font-weight: 650; letter-spacing: .02em;
+    background: var(--panel2); border: 1px solid var(--line); color: var(--accent);
+    border-radius: 6px; padding: 2px 8px; }
+  .code { font: 600 22px/1.3 ui-monospace, "SF Mono", Menlo, Consolas, monospace; margin: 8px 0 4px;
+    word-break: break-all; white-space: pre-wrap; user-select: all; }
+  .code.long { font-size: 15px; font-weight: 500; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .btn { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 10px;
+    padding: 9px 14px; font-size: 14px; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; }
+  .btn.go { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  .product { display: flex; gap: 14px; align-items: flex-start; }
+  .product img { width: 84px; height: 84px; object-fit: contain; background: #fff; border-radius: 10px; flex: none; }
+  .product .name { font-weight: 650; font-size: 17px; }
+  .product .meta { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .src { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .src a { color: var(--accent); }
+  .others button { margin: 6px 6px 0 0; }
+  .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line);
+    border-top-color: var(--accent); animation: spin .8s linear infinite; display: inline-block; vertical-align: -3px; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .err { color: var(--err); }
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 0 16px 16px; margin-top: auto; }
+  #toast { position: fixed; left: 50%; bottom: calc(24px + var(--safe-bot)); transform: translateX(-50%) translateY(20px);
+    background: #fff; color: #111; padding: 9px 16px; border-radius: 999px; font-size: 14px; opacity: 0;
+    transition: .2s; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Barcode Scanner</h1>
+  <button class="iconbtn" id="soundBtn" aria-pressed="false" title="Beep on scan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path id="soundWave" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>
+    <span class="sr">Sound</span>
+  </button>
+</header>
+
+<div id="stage">
+  <video id="video" playsinline muted autoplay></video>
+  <div id="frame"><div id="laser"></div><i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i></div>
+  <div id="hint">Fit the barcode inside the frame</div>
+  <div id="idle">
+    <button class="primary" id="startBtn">Start camera</button>
+    <p id="idleMsg">Point the back camera at any barcode or QR code.</p>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="iconbtn" id="stopBtn" hidden>Stop camera</button>
+  <button class="iconbtn" id="torchBtn" aria-pressed="false" hidden>Torch</button>
+  <button class="iconbtn" id="photoBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/></svg>
+    Scan a photo
+  </button>
+  <input type="file" id="fileInput" accept="image/*" hidden>
+</div>
+
+<main id="out">
+  <div class="card empty" id="placeholder">The scanned code, its type and any product details will show up here.</div>
+</main>
+
+<footer>v<span id="ver">1.0.0</span> · Product data from the Open Food Facts databases</footer>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+const VERSION = "1.0.0";
+document.getElementById("ver").textContent = VERSION;
+
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), video = $("video"), out = $("out");
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+/* ---------- friendly format names ---------- */
+const FORMAT_NAMES = {
+  EAN13: "EAN-13", EAN8: "EAN-8", UPCA: "UPC-A", UPCE: "UPC-E", Code128: "Code 128", Code39: "Code 39",
+  Code93: "Code 93", ITF: "ITF", ITF14: "ITF-14", Codabar: "Codabar", DataBar: "GS1 DataBar",
+  DataBarExp: "GS1 DataBar Expanded", QRCode: "QR Code", MicroQRCode: "Micro QR", DataMatrix: "Data Matrix",
+  PDF417: "PDF417", Aztec: "Aztec"
+};
+const fmtName = (f) => FORMAT_NAMES[f] || FORMAT_NAMES[String(f).replace(/[\s-]/g, "")] || f;
+const norm = (f) => String(f).replace(/[\s-]/g, "").toUpperCase();
+const RETAIL = new Set(["EAN13", "EAN8", "UPCA", "UPCE", "ITF14"]);
+const isRetail = (f) => RETAIL.has(norm(f));
+
+/* ---------- decoder worker ---------- */
+const worker = new Worker("worker.js");
+let reqId = 0;
+const pending = new Map();
+worker.onmessage = (e) => {
+  const p = pending.get(e.data.id);
+  if (!p) return;
+  pending.delete(e.data.id);
+  e.data.error ? p.reject(new Error(e.data.error)) : p.resolve(e.data.results);
+};
+worker.onerror = (e) => console.error("decoder worker", e.message);
+function decode(image, hard) {
+  const id = ++reqId;
+  return new Promise((resolve, reject) => {
+    pending.set(id, { resolve, reject });
+    worker.postMessage({ id, image, hard }, image.data ? [image.data.buffer] : []);
+  });
+}
+
+/* ---------- feedback: beep + vibrate ---------- */
+let audio = null;
+let soundOn = store.get("sound", true);
+function syncSoundBtn() {
+  $("soundBtn").setAttribute("aria-pressed", "false");
+  $("soundWave").style.display = soundOn ? "" : "none";
+  $("soundBtn").title = soundOn ? "Beep is on" : "Beep is off";
+}
+syncSoundBtn();
+$("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSoundBtn(); unlockAudio(); toast(soundOn ? "Beep on" : "Beep off"); };
+function unlockAudio() {
+  /* iPhone only lets a page make sound after a tap, so this runs from Start / Sound taps. */
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === "suspended") audio.resume();
+  } catch {}
+}
+function beep() {
+  if (soundOn && audio) {
+    try {
+      const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+      o.type = "sine"; o.frequency.value = 1760;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+      o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.14);
+    } catch {}
+  }
+  if (navigator.vibrate) navigator.vibrate(60);   /* Android only; iPhone ignores it */
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 1600);
+}
+
+/* ---------- camera ---------- */
+let stream = null, track = null, scanning = false, wantCamera = false, frameNo = 0;
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+function cameraHelp(err) {
+  if (!window.isSecureContext) return "The camera only works when the app is opened over https (or on localhost).";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return "This browser does not give web pages camera access. Use “Scan a photo” instead.";
+  const n = err && err.name;
+  if (n === "NotAllowedError" || n === "SecurityError")
+    return "Camera access was blocked. On iPhone, open Settings → Chrome and turn on Camera, then reload this page and tap Allow. You can still use “Scan a photo”.";
+  if (n === "NotFoundError" || n === "OverconstrainedError") return "No camera was found on this device. Use “Scan a photo” instead.";
+  if (n === "NotReadableError" || n === "AbortError") return "The camera is busy in another app or tab. Close it there and try again.";
+  return "Could not start the camera (" + (err && (err.message || err.name) || "unknown error") + ").";
+}
+
+async function startCamera() {
+  unlockAudio();
+  wantCamera = true;
+  $("idleMsg").textContent = "Starting camera…";
+  $("startBtn").hidden = true;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.isSecureContext) throw new Error("unsupported");
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+    });
+    track = stream.getVideoTracks()[0];
+    video.srcObject = stream;
+    await video.play();
+    try { await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }); } catch {}
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    $("torchBtn").hidden = !caps.torch;
+    $("torchBtn").setAttribute("aria-pressed", "false");
+    stage.classList.add("running");
+    $("stopBtn").hidden = false;
+    store.set("autostart", true);
+    scanning = true;
+    lastFrameText = null;
+    loop();
+  } catch (err) {
+    wantCamera = false;
+    stopCamera(true);
+    $("idleMsg").textContent = cameraHelp(err);
+    $("startBtn").hidden = false;
+    $("startBtn").textContent = "Try again";
+  }
+}
+
+function stopCamera(keepMsg) {
+  scanning = false;
+  if (stream) stream.getTracks().forEach((t) => t.stop());
+  stream = null; track = null; video.srcObject = null;
+  stage.classList.remove("running", "hit");
+  $("stopBtn").hidden = true; $("torchBtn").hidden = true;
+  $("startBtn").hidden = false; $("startBtn").textContent = "Start camera";
+  if (!keepMsg) $("idleMsg").textContent = "Camera is off.";
+}
+
+$("startBtn").onclick = startCamera;
+$("stopBtn").onclick = () => { wantCamera = false; store.set("autostart", false); stopCamera(); };
+$("torchBtn").onclick = async () => {
+  if (!track) return;
+  const on = $("torchBtn").getAttribute("aria-pressed") !== "true";
+  try { await track.applyConstraints({ advanced: [{ torch: on }] }); $("torchBtn").setAttribute("aria-pressed", String(on)); }
+  catch { toast("Torch not available"); }
+};
+
+/* Free the camera when the app is in the background, pick it up again on return. */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { if (stream) { const w = wantCamera; stopCamera(true); wantCamera = w; } }
+  else if (wantCamera && !stream) startCamera();
+});
+
+/* The part of the video under the on-screen frame, in video pixels (object-fit: cover). */
+function frameCrop() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  const sr = stage.getBoundingClientRect(), fr = $("frame").getBoundingClientRect();
+  if (!sr.width || !fr.width) return { x: vw * 0.1, y: vh * 0.2, w: vw * 0.8, h: vh * 0.6 };
+  const scale = Math.max(sr.width / vw, sr.height / vh);
+  const offX = (vw * scale - sr.width) / 2, offY = (vh * scale - sr.height) / 2;
+  const pad = 0.12;
+  let x = (fr.left - sr.left + offX) / scale, y = (fr.top - sr.top + offY) / scale;
+  let w = fr.width / scale, h = fr.height / scale;
+  x -= w * pad; y -= h * pad; w *= 1 + 2 * pad; h *= 1 + 2 * pad;
+  x = Math.max(0, x); y = Math.max(0, y);
+  w = Math.min(vw - x, w); h = Math.min(vh - y, h);
+  return { x, y, w, h };
+}
+
+/* Codes without a check digit (Code 39, ITF, Codabar…) must be read twice in a
+   row before they count, so a smudge doesn't produce a wrong number. */
+let lastFrameText = null, lastHit = { text: null, at: 0 };
+const NEEDS_CONFIRM = new Set(["CODE39", "CODE93", "ITF", "CODABAR"]);
+
+async function loop() {
+  while (scanning) {
+    if (video.readyState < 2 || !video.videoWidth) { await sleep(100); continue; }
+    const c = frameCrop();
+    if (!(c.w >= 16 && c.h >= 16)) { await sleep(150); continue; }
+    const maxSide = 1280, k = Math.min(1, maxSide / Math.max(c.w, c.h));
+    canvas.width = Math.round(c.w * k); canvas.height = Math.round(c.h * k);
+    ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, canvas.width, canvas.height);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let results = [];
+    try { results = await decode(img, ++frameNo % 3 === 0); } catch (e) { console.warn(e); await sleep(300); }
+    if (!scanning) break;
+    const r = results[0];
+    if (r) {
+      const key = norm(r.format) + "|" + r.text;
+      const confirmed = !NEEDS_CONFIRM.has(norm(r.format)) || lastFrameText === key;
+      lastFrameText = key;
+      if (confirmed) {
+        const now = Date.now();
+        if (key !== lastHit.text || now - lastHit.at > 4000) onHit(r);
+        lastHit = { text: key, at: now };
+      }
+    } else {
+      lastFrameText = null;
+    }
+    await sleep(40);
+  }
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function onHit(r) {
+  beep();
+  stage.classList.add("hit");
+  setTimeout(() => stage.classList.remove("hit"), 450);
+  showResult(r, []);
+}
+
+/* ---------- photo fallback ---------- */
+$("photoBtn").onclick = () => { unlockAudio(); $("fileInput").click(); };
+$("fileInput").onchange = async (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  showBusy("Reading the photo…");
+  try {
+    const img = await loadImage(file);
+    const maxSide = 2400, k = Math.min(1, maxSide / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    const cx = c.getContext("2d", { willReadFrequently: true });
+    cx.drawImage(img, 0, 0, c.width, c.height);
+    let results = await decode(cx.getImageData(0, 0, c.width, c.height), true);
+    if (!results.length && k === 1 && Math.max(c.width, c.height) > 1000) {
+      /* Very large codes in a photo sometimes read better smaller. */
+      const s = document.createElement("canvas"), f = 1000 / Math.max(c.width, c.height);
+      s.width = Math.round(c.width * f); s.height = Math.round(c.height * f);
+      const sx = s.getContext("2d", { willReadFrequently: true }); sx.drawImage(c, 0, 0, s.width, s.height);
+      results = await decode(sx.getImageData(0, 0, s.width, s.height), true);
+    }
+    if (!results.length) { showMessage("No barcode found in that photo. Try a sharper, closer photo with the whole code in view.", true); return; }
+    beep();
+    showResult(results[0], results.slice(1));
+  } catch (err) {
+    showMessage("Could not read that image (" + err.message + ").", true);
+  }
+};
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("unsupported image")); };
+    img.src = url;
+  });
+}
+
+/* ---------- rendering ---------- */
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function showBusy(msg) { out.innerHTML = `<div class="card muted"><span class="spinner"></span>${esc(msg)}</div>`; }
+function showMessage(msg, isErr) { out.innerHTML = `<div class="card ${isErr ? "err" : "muted"}">${esc(msg)}</div>`; }
+
+let current = null;
+function showResult(r, others) {
+  /* The decoder reports UPC-A as a 13-digit EAN starting with 0; show it the
+     way it's printed on the pack. Lookups still use the 13-digit number. */
+  if (norm(r.format) === "EAN13" && /^0\d{12}$/.test(r.text)) r = { ...r, format: "UPCA", text: r.text.slice(1), gtin: r.text };
+  current = r;
+  const text = r.text;
+  const isUrl = /^https?:\/\/\S+$/i.test(text.trim());
+  const long = text.length > 40;
+  let html = `<div class="card" id="resCard">
+    <span class="fmt">${esc(fmtName(r.format))}</span>
+    <div class="code${long ? " long" : ""}">${esc(text)}</div>
+    <div class="row">
+      <button class="btn" id="copyBtn">Copy</button>
+      ${isUrl ? `<a class="btn go" href="${esc(text.trim())}" target="_blank" rel="noopener noreferrer">Open link</a>` : ""}
+      ${!isUrl ? `<a class="btn" href="https://www.google.com/search?q=${encodeURIComponent(text)}" target="_blank" rel="noopener noreferrer">Search the web</a>` : ""}
+    </div>`;
+  if (others && others.length) {
+    html += `<div class="others muted" style="margin-top:12px">Also in the photo:<br>${others.map((o, i) =>
+      `<button class="btn" data-other="${i}">${esc(fmtName(o.format))}: ${esc(o.text.slice(0, 24))}${o.text.length > 24 ? "…" : ""}</button>`).join("")}</div>`;
+  }
+  html += `</div>`;
+  if (isRetail(r.format) && /^\d{6,14}$/.test(text)) html += `<div class="card" id="lookup"><span class="spinner"></span><span class="muted">Looking up product…</span></div>`;
+  out.innerHTML = html;
+  $("copyBtn").onclick = async () => {
+    try { await navigator.clipboard.writeText(text); toast("Copied"); }
+    catch { toast("Copy failed"); }
+  };
+  out.querySelectorAll("[data-other]").forEach((b) => {
+    b.onclick = () => { const i = +b.dataset.other; const rest = [r, ...others.filter((_, j) => j !== i)]; showResult(others[i], rest); };
+  });
+  if ($("lookup")) lookup(r).then((res) => { if (current === r) renderLookup(res, r); });
+}
+
+/* ---------- product lookup ---------- */
+/* UPC-E is a compressed UPC-A; the databases store the full 12/13-digit number. */
+/* e is 8 digits: number system, 6 data digits, check digit. */
+function upceToUpca(e) {
+  const ns = e[0], d = e.slice(1, 7), check = e[7], last = d[5];
+  let body;
+  if ("012".includes(last)) body = d.slice(0, 2) + last + "0000" + d.slice(2, 5);
+  else if (last === "3") body = d.slice(0, 3) + "00000" + d.slice(3, 5);
+  else if (last === "4") body = d.slice(0, 4) + "00000" + d[4];
+  else body = d.slice(0, 5) + "0000" + last;
+  return ns + body + check;
+}
+function gtinFor(r) {
+  const t = r.text;
+  if (r.gtin) return r.gtin;
+  if (norm(r.format) === "UPCE" && /^\d{8}$/.test(t)) return upceToUpca(t);
+  return t;
+}
+
+const SOURCES = [
+  { name: "Open Food Facts", host: "world.openfoodfacts.org" },
+  { name: "Open Beauty Facts", host: "world.openbeautyfacts.org" },
+  { name: "Open Pet Food Facts", host: "world.openpetfoodfacts.org" },
+  { name: "Open Products Facts", host: "world.openproductsfacts.org" }
+];
+const lookupCache = new Map();
+
+async function fetchJson(url, ms) {
+  const ac = new AbortController(); const t = setTimeout(() => ac.abort(), ms);
+  try { const res = await fetch(url, { signal: ac.signal }); return await res.json(); }
+  finally { clearTimeout(t); }
+}
+
+async function lookup(r) {
+  const code = gtinFor(r);
+  if (lookupCache.has(code)) return lookupCache.get(code);
+  if (!navigator.onLine) return { offline: true, code };
+  const fields = "product_name,product_name_en,generic_name,brands,quantity,image_front_small_url,image_small_url,categories";
+  const attempts = SOURCES.map((s) =>
+    fetchJson(`https://${s.host}/api/v2/product/${encodeURIComponent(code)}.json?fields=${fields}`, 7000)
+      .then((j) => (j && j.status === 1 && j.product ? { source: s, product: j.product } : null))
+      .catch(() => undefined));
+  /* All four are asked at once; take the first in priority order that knows the
+     product, without waiting on lower-priority ones once there is a hit. */
+  const results = [];
+  let hit = null;
+  for (const a of attempts) { const x = await a; results.push(x); if (x) { hit = x; break; } }
+  const out = hit ? { code, ...hit } : { code, notFound: true, failed: results.every((x) => x === undefined) };
+  if (!out.failed) lookupCache.set(code, out);
+  return out;
+}
+
+function renderLookup(res, r) {
+  const box = $("lookup");
+  if (!box) return;
+  if (res.offline) { box.innerHTML = `<div class="muted">You are offline, so the product can't be looked up right now.</div>`; return; }
+  if (res.failed) { box.innerHTML = `<div class="muted">The product databases could not be reached. Check your connection and scan again.</div>`; return; }
+  if (res.notFound) {
+    box.innerHTML = `<div class="muted">This product isn't in the free Open Food Facts databases yet. Try “Search the web” above.</div>`;
+    return;
+  }
+  const p = res.product;
+  const name = p.product_name || p.product_name_en || p.generic_name || "Unnamed product";
+  const img = p.image_front_small_url || p.image_small_url;
+  const meta = [p.brands, p.quantity].filter(Boolean).join(" · ");
+  const cat = (p.categories || "").split(",").map((s) => s.trim().replace(/^[a-z]{2}:/, "")).filter(Boolean).slice(-1)[0];
+  box.innerHTML = `<div class="product">
+      ${img ? `<img src="${esc(img)}" alt="" referrerpolicy="no-referrer">` : ""}
+      <div><div class="name">${esc(name)}</div>
+        ${meta ? `<div class="meta">${esc(meta)}</div>` : ""}
+        ${cat ? `<div class="meta">${esc(cat)}</div>` : ""}</div>
+    </div>
+    <div class="src">From <a href="https://${res.source.host}/product/${encodeURIComponent(res.code)}" target="_blank" rel="noopener noreferrer">${esc(res.source.name)}</a></div>`;
+}
+
+/* ---------- start-up ---------- */
+if (!window.isSecureContext || !navigator.mediaDevices) {
+  $("idleMsg").textContent = cameraHelp();
+  $("startBtn").hidden = true;
+} else if (store.get("autostart", false)) {
+  startCamera();
+}
+
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
