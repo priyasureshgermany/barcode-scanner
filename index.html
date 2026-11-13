@@ -202,6 +202,57 @@
   .cmp td.win { color: var(--hit); font-weight: 700; }
   .cmp .ch img { width: 56px; height: 56px; object-fit: contain; background: #fff; border-radius: 8px; display: block; margin-bottom: 4px; }
   .cmp .cn { font-weight: 650; }
+  /* six tabs: scroll sideways on narrow phones rather than squash */
+  .tabs { overflow-x: auto; scrollbar-width: none; padding-top: 8px; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { flex: 1 0 auto; padding: 8px 10px; font-size: 13px; }
+  .banner { margin: 10px 16px 0; padding: 10px 14px; border-radius: 12px; background: var(--panel2); border: 1px solid var(--accent);
+    font-size: 14px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    max-width: 640px; width: calc(100% - 32px); align-self: center; }
+  .bbar span { display: inline-flex; gap: 6px; align-items: center; }
+  /* loyalty cards */
+  .lc { display: grid; gap: 4px; }
+  .lc-face { border: 0; border-radius: 14px; padding: 16px; min-height: 92px; text-align: left; cursor: pointer;
+    background: var(--lc); color: var(--lci); display: grid; align-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
+  .lc-n { font-size: 19px; font-weight: 700; }
+  .lc-num { font: 500 14px ui-monospace, Menlo, Consolas, monospace; opacity: .85; word-break: break-all; }
+  .lc-tools { display: flex; gap: 14px; justify-content: flex-end; }
+  .lc-tools .lnk:disabled { opacity: .3; }
+  .lc-hit { border-left: 6px solid var(--lc); }
+  .lc-name { font-size: 20px; font-weight: 700; margin: 2px 0 4px; }
+  .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sw { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+  .sw.on { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+  .del-btn { color: var(--err); margin-left: auto; }
+  .pform select#cfFmt { width: 100%; }
+  dialog#cardShow { width: 100vw; height: 100dvh; max-width: 100vw; max-height: 100dvh; margin: 0; border: 0; padding: 0;
+    background: #fff; color: #111; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+  dialog#cardShow[open] { display: flex; }
+  dialog#cardShow::backdrop { background: #fff; }
+  .cs-name { font-size: 20px; font-weight: 700; padding: 6px 18px; border-radius: 999px; }
+  .cs-code { width: 92vw; max-width: 720px; display: flex; justify-content: center; }
+  .cs-code svg { width: 100%; height: auto; max-height: 38dvh; image-rendering: pixelated; shape-rendering: crispEdges; }
+  .cs-code.sq svg { width: min(78vw, 52dvh); max-height: none; }
+  .cs-num { font: 600 26px/1.2 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; text-align: center; word-break: break-all; padding: 0 12px; }
+  .cs-note { font-size: 13px; color: #555; }
+  .cs-close { font-size: 13px; color: #888; position: absolute; bottom: calc(18px + var(--safe-bot)); }
+  /* basket */
+  .btot .big { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; margin: 6px 0 0; }
+  .bmode { justify-content: space-between; align-items: center; margin-top: 0; }
+  .bline { margin-top: 8px; font-size: 14px; padding: 6px 10px; border-radius: 8px; background: var(--panel2); }
+  .bline.near { background: #3a2a14; color: #ffd79a; }
+  .bline.over { background: #4a1418; color: #ffd0d0; }
+  .warn-t { color: var(--warn); }
+  .bi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+  .bn { font-weight: 600; }
+  .brow { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+  .bprice { width: 110px; font-size: 16px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--warn); background: var(--panel2); color: var(--text); }
+  .qty { display: inline-flex; align-items: center; gap: 8px; }
+  .qty .btn { min-width: 34px; justify-content: center; }
+  .bsum { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .basket-h summary { list-style: none; display: grid; gap: 2px; cursor: pointer; }
+  .bh-items { list-style: none; padding: 8px 0 0; margin: 0; display: grid; gap: 4px; font-size: 13px; }
+  .bh-items li { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); }
   .label .lt, .info .lt { font-size: 13px; color: var(--muted); font-weight: 600; }
   .origin { color: var(--muted); font-size: 12px; margin-top: 2px; }
   .info dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 10px 0 4px; font-size: 14px; }
@@ -246,6 +297,8 @@
 
 <nav class="tabs" role="tablist">
   <button role="tab" data-tab="scan" aria-selected="true">Scan</button>
+  <button role="tab" data-tab="basket" aria-selected="false">Basket<i class="tb n" id="basketBadge" hidden></i></button>
+  <button role="tab" data-tab="cards" aria-selected="false">Cards</button>
   <button role="tab" data-tab="history" aria-selected="false">History</button>
   <button role="tab" data-tab="pantry" aria-selected="false">Pantry<i class="tb" id="pantryBadge" hidden></i></button>
   <button role="tab" data-tab="compare" aria-selected="false">Compare<i class="tb n" id="compareBadge" hidden></i></button>
@@ -273,6 +326,9 @@
   <input type="file" id="fileInput" accept="image/*" hidden>
 </div>
 
+<div class="banner" id="captureBanner" hidden>Scan your loyalty card now: hold its barcode in the frame. <button class="btn small" id="captureCancel">Cancel</button></div>
+<div class="banner bbar" id="basketBar" hidden></div>
+
 <main id="out">
   <div class="card empty" id="placeholder">The scanned code, its type and any product details will show up here.</div>
 </main>
@@ -282,6 +338,17 @@
   <div class="vh"><input type="search" id="histSearch" placeholder="Search name or code" aria-label="Search history"><span class="muted small" id="histCount"></span></div>
   <div class="row vb"><button class="btn" id="histExport">Export CSV</button><button class="btn" id="histClear">Clear</button></div>
   <ul class="list" id="histList"></ul>
+</section>
+
+<section class="view" id="basketView" hidden>
+  <div id="basketBox"></div>
+</section>
+
+<section class="view" id="cardsView" hidden>
+  <div class="row vb"><button class="btn go" id="cardScan">Scan a card</button><button class="btn" id="cardType">Type a number</button></div>
+  <div id="cardForm" hidden></div>
+  <ul class="list" id="cardList"></ul>
+  <div class="muted small">Cards stay on this phone. Tap one to show it at the till; the screen stays on while it's open. Turn the brightness up yourself: web pages can't change it.</div>
 </section>
 
 <section class="view" id="pantryView" hidden>
@@ -294,6 +361,14 @@
 </section>
 
 <footer><button class="lnk" id="verLink">Version <span id="ver"></span></button> · Product data from Open Food Facts, books from Open Library</footer>
+
+<dialog id="cardShow" aria-label="Loyalty card">
+  <div class="cs-name" id="csName"></div>
+  <div class="cs-code" id="csCode"></div>
+  <div class="cs-num" id="csNum"></div>
+  <div class="cs-note" id="csNote"></div>
+  <div class="cs-close">Tap anywhere to close</div>
+</dialog>
 
 <dialog id="about">
   <div class="dh"><h2>About</h2><button class="iconbtn" id="aboutClose" aria-label="Close">✕</button></div>
@@ -325,8 +400,8 @@
 <script>
 "use strict";
 /* Both written by tools/bump-version.mjs; don't edit by hand. */
-const APP_VERSION = "1.1.5";
-const APP_BUILT = "2026-11-12";
+const APP_VERSION = "1.1.6";
+const APP_BUILT = "2026-11-13";
 document.getElementById("ver").textContent = APP_VERSION;
 
 const $ = (id) => document.getElementById(id);
@@ -568,7 +643,7 @@ function onHit(r) {
   beep();
   stage.classList.add("hit");
   setTimeout(() => stage.classList.remove("hit"), 450);
-  showResult(r, []);
+  handleScan(r, []);
 }
 
 /* ---------- photo fallback ---------- */
@@ -595,7 +670,7 @@ $("fileInput").onchange = async (e) => {
     }
     if (!results.length) { showMessage("No barcode found in that photo. Try a sharper, closer photo with the whole code in view.", true); return; }
     beep();
-    showResult(results[0], results.slice(1));
+    handleScan(results[0], results.slice(1));
   } catch (err) {
     showMessage("Could not read that image (" + err.message + ").", true);
   }
@@ -797,6 +872,9 @@ function parseIfa(t) {
 /* What a scan is, and what to do with it. */
 function analyze(r) {
   const t = r.text, f = norm(r.format), sym = r.symbologyIdentifier || "";
+  /* One of your own loyalty cards: show it, and never look it up as a product. */
+  const card = findCard(t);
+  if (card) return { kind: "card", card };
   if (/^https?:\/\/\S+$/i.test(t.trim())) {
     const dl = parseDigitalLink(t.trim());
     if (!dl) return { kind: "url", url: t.trim() };
@@ -850,7 +928,7 @@ function showResult(r, others, opts = {}) {
   a.origin = a.gtin ? gs1Origin(a.gtin) : null;
   a.compare = a.pzn ? "PZN " + a.pzn : a.gtin && a.kind !== "issn" ? a.gtin : null;
   const lookupKind = a.kind === "book" ? "book" : a.gtin && a.kind !== "issn" && !a.pzn && !a.medicine ? (/^97[89]/.test(a.gtin) ? "book" : "product") : null;
-  const priceKey = a.kind === "label" ? a.label.key : a.pzn ? "pzn:" + a.pzn : a.gtin || a.g14 || (isUrl ? null : text);
+  const priceKey = a.kind === "card" ? null : a.kind === "label" ? a.label.key : a.pzn ? "pzn:" + a.pzn : a.gtin || a.g14 || (isUrl ? null : text);
   const searchFor = a.pzn ? "PZN " + a.pzn : a.gtin || a.g14 || text;
   const shownText = a.kind === "gs1" && !a.url ? text.replace(/[␞␝␄]/g, " ").trim() : text;
   editingPrice = false;
@@ -865,7 +943,7 @@ function showResult(r, others, opts = {}) {
     <div class="row">
       <button class="btn" id="copyBtn">Copy</button>
       ${isUrl ? `<a class="btn go" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">Open link</a>` : ""}
-      ${!isUrl ? `<a class="btn" id="searchBtn" href="${esc(webSearch(searchFor))}" target="_blank" rel="noopener noreferrer">Search the web</a>` : ""}
+      ${!isUrl && a.kind !== "card" ? `<a class="btn" id="searchBtn" href="${esc(webSearch(searchFor))}" target="_blank" rel="noopener noreferrer">Search the web</a>` : ""}
       ${compareButtons(a)}
     </div>`;
   if (others && others.length) {
@@ -876,6 +954,7 @@ function showResult(r, others, opts = {}) {
   if (a.kind === "label") html += labelCard(a.label);
   if (a.kind === "gs1") html += infoCard(a);
   if (a.kind === "issn") html += `<div class="card muted">A magazine or newspaper code (ISSN). These aren't in the product databases; the last digits usually change with each issue.</div>`;
+  if (a.kind === "card") html += `<div class="card lc-hit" style="--lc:${esc(a.card.color)}"><div class="lt">Your loyalty card</div><div class="lc-name">${esc(a.card.name)}</div><div class="muted small">${basketOn() ? "Loyalty cards aren't added to the basket. " : ""}No product lookup for your own cards.</div><div class="row"><button class="btn go" id="showCardBtn">Show card</button></div></div>`;
   if (a.kind === "store8") html += `<div class="card muted">A short code a shop made for its own use, so it can't be looked up.</div>`;
   if (lookupKind) html += `<div class="card" id="lookup"><span class="spinner"></span><span class="muted">${lookupKind === "book" ? "Looking up book…" : "Looking up product…"}</span></div>`;
   if (priceKey) html += `<div class="card" id="prices"></div><div class="card" id="acts"></div>`;
@@ -888,6 +967,7 @@ function showResult(r, others, opts = {}) {
     renderPrices(priceKey, null, a.label.cents);
     $("prices").scrollIntoView({ behavior: "smooth", block: "center" });
   };
+  if ($("showCardBtn")) $("showCardBtn").onclick = () => openCard(a.card.id);
   $("copyBtn").onclick = async () => {
     try { await navigator.clipboard.writeText(text); toast("Copied"); }
     catch { toast("Copy failed"); }
@@ -910,6 +990,7 @@ function learnName(name, product) {
   ctx.name = name;
   if (product) { ctx.product = product; saveProduct(product); }
   updateHistory(ctx.histId, { name });
+  basketRename(ctx.key, name);
   if (ctx.key) { if (!editingPrice) renderPrices(ctx.key); renderActs(); }
 }
 
@@ -1417,6 +1498,7 @@ function renderActs() {
   box.innerHTML = `<div class="ph"><span class="pt">Keep track</span></div>
     <div class="row">
       <button class="btn" id="actPantry">Add to pantry</button>
+      <button class="btn" id="actCard">Save as loyalty card</button>
       <button class="btn" id="actCompare"${inCmp ? " disabled" : ""}>${inCmp ? "In Compare ✓" : "Compare (" + cmp.length + "/2)"}</button>
     </div>
     <div id="pantryForm"></div>
@@ -1448,6 +1530,7 @@ function renderActs() {
     syncTabBadges();
   };
   $("actPantry").onclick = () => openPantryForm();
+  $("actCard").onclick = () => { showTab("cards"); openCardForm(null, { number: ctx.r.text, format: ctx.r.format }); };
 }
 function openPantryForm() {
   const box = $("pantryForm");
@@ -1494,6 +1577,14 @@ function renderHistory() {
   const h = loadHist().filter((e) => !q || (e.name + " " + e.code + " " + fmtName(e.format)).toLowerCase().includes(q));
   $("histList").innerHTML = h.length ? h.slice(0, 300).map((e) => {
     const d = new Date(e.at);
+    const when = esc(d.toLocaleDateString(undefined, { day: "numeric", month: "short" })) + " " + esc(d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }));
+    if (e.kind === "basket") {
+      /* A finished basket: opens to show what was in it. */
+      return `<li><details class="hist basket-h"><summary><span class="hn">${esc(e.name)}</span>
+        <span class="hd">${when} · ${money(e.total, e.cur)}</span></summary>
+        <ul class="bh-items">${(e.items || []).map((i) => `<li><span>${i.qty} × ${esc(i.name)}</span><span>${i.cents !== null ? money(i.cents * i.qty, e.cur) : "no price"}</span></li>`).join("")}</ul>
+      </details></li>`;
+    }
     const p = e.key ? (loadPrices()[e.key] || []).sort((a, b) => b.at.localeCompare(a.at))[0] : null;
     const code = e.code.replace(/[␞␝␄]/g, " ").trim();
     return `<li><button class="hist" data-hist="${e.id}">
@@ -1525,6 +1616,11 @@ function exportHistory() {
   const rows = [["Date", "Time", "Name", "Code", "Type", "Last price", "Currency", "Shop"].join(";")];
   for (const e of h) {
     const d = new Date(e.at);
+    if (e.kind === "basket") {
+      rows.push([d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }), d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+        csvCell(e.name), "", "Basket", (e.total / 100).toFixed(2).replace(".", ","), e.cur, csvCell(e.shop || "")].join(";"));
+      continue;
+    }
     const p = e.key ? (loadPrices()[e.key] || []).sort((a, b) => b.at.localeCompare(a.at))[0] : null;
     rows.push([
       d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }),
@@ -1621,6 +1717,355 @@ function renderCompare() {
   });
 }
 
+/* ---------- where a scan goes ---------- */
+/* Normally a scan opens its result. While a loyalty card is being added it goes
+   to the card form instead; in basket mode it also goes into the basket. */
+let captureCard = false;
+function handleScan(r, others) {
+  if (captureCard) { captureCard = false; syncScanBanner(); showTab("cards"); openCardForm(null, { number: r.text, format: r.format }); return; }
+  showResult(r, others);
+  if (basketOn() && ctx) basketAddFromScan();
+}
+
+/* ---------- barcode writer (for showing loyalty cards) ---------- */
+/* The writer half of the same zxing-wasm library, loaded only when a card is
+   first shown. vendor/zxing-wasm-LICENSE.txt covers both halves (MIT). */
+let writerReady = null;
+function loadWriter() {
+  if (!writerReady) writerReady = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "vendor/zxing-writer.js";
+    s.onload = () => {
+      ZXingWASM.prepareZXingModule({
+        overrides: { locateFile: (p, pre) => p.endsWith(".wasm") ? new URL("vendor/" + p, location.href).href : pre + p },
+        fireImmediately: true
+      });
+      resolve(ZXingWASM);
+    };
+    s.onerror = () => { writerReady = null; reject(new Error("couldn't load the barcode writer")); };
+    document.head.appendChild(s);
+  });
+  return writerReady;
+}
+/* Reader format names → the writer's. Formats it can't draw fall back to Code 128. */
+const WRITE_AS = {
+  EAN13: "EAN13", EAN8: "EAN8", UPCA: "UPCA", UPCE: "UPCE", CODE128: "Code128", CODE39: "Code39", PZN: "Code39",
+  CODE93: "Code93", ITF: "ITF", ITF14: "ITF", CODABAR: "Codabar", QRCODE: "QRCode", MICROQRCODE: "QRCode",
+  DATAMATRIX: "DataMatrix", PDF417: "PDF417", AZTEC: "AztecCode", AZTECCODE: "AztecCode"
+};
+const CARD_FORMATS = [["Code128", "Code 128"], ["EAN13", "EAN-13"], ["EAN8", "EAN-8"], ["UPCA", "UPC-A"], ["Code39", "Code 39"],
+  ["ITF", "ITF"], ["Codabar", "Codabar"], ["QRCode", "QR code"], ["DataMatrix", "Data Matrix"], ["PDF417", "PDF417"], ["AztecCode", "Aztec"]];
+async function drawBarcode(text, format) {
+  const W = await loadWriter();
+  const want = WRITE_AS[norm(format)] || "Code128";
+  const is2d = /QRCode|DataMatrix|AztecCode|PDF417/.test(want);
+  let r = await W.writeBarcode(text, { format: want, scale: is2d ? 8 : 4, withHRT: false, withQuietZones: true });
+  let used = want;
+  if (r.error && want !== "Code128") { r = await W.writeBarcode(text, { format: "Code128", scale: 4, withQuietZones: true }); used = "Code128"; }
+  if (r.error) throw new Error(r.error);
+  return { svg: r.svg, used, is2d: /QRCode|DataMatrix|AztecCode/.test(used) };
+}
+
+/* ---------- loyalty cards ---------- */
+const CARD_COLORS = ["#0046AA", "#C8102E", "#E4002B", "#FFCC00", "#00843D", "#7A2E8E", "#F26522", "#3A3A3A"];
+const loadCards = () => store.get("cards", []);
+const saveCards = (c) => store.set("cards", c);
+const findCard = (text) => loadCards().find((c) => c.number === text) || null;
+const cardInk = (hex) => {
+  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  return r * 0.299 + g * 0.587 + b * 0.114 > 160 ? "#111" : "#fff";
+};
+function renderCards() {
+  const cards = loadCards();
+  $("cardList").innerHTML = cards.length ? cards.map((c, i) => `<li class="lc" style="--lc:${esc(c.color)};--lci:${cardInk(c.color)}">
+      <button class="lc-face" data-cshow="${c.id}"><span class="lc-n">${esc(c.name)}</span><span class="lc-num">${esc(c.number)}</span></button>
+      <div class="lc-tools">
+        <button class="lnk" data-cup="${i}" ${i ? "" : "disabled"} aria-label="Move up">▲</button>
+        <button class="lnk" data-cdown="${i}" ${i < cards.length - 1 ? "" : "disabled"} aria-label="Move down">▼</button>
+        <button class="lnk" data-cedit="${c.id}">Edit</button>
+      </div></li>`).join("")
+    : `<li class="muted empty">No cards yet. Tap Scan a card and hold your Payback, DeutschlandCard, Lidl Plus, DMart or other card under the camera, or type its number.</li>`;
+  const move = (i, d) => { const c = loadCards(); [c[i], c[i + d]] = [c[i + d], c[i]]; saveCards(c); renderCards(); };
+  $("cardList").querySelectorAll("[data-cshow]").forEach((b) => b.onclick = () => openCard(b.dataset.cshow));
+  $("cardList").querySelectorAll("[data-cup]").forEach((b) => b.onclick = () => move(+b.dataset.cup, -1));
+  $("cardList").querySelectorAll("[data-cdown]").forEach((b) => b.onclick = () => move(+b.dataset.cdown, 1));
+  $("cardList").querySelectorAll("[data-cedit]").forEach((b) => b.onclick = () => openCardForm(b.dataset.cedit));
+}
+function openCardForm(id, preset = {}) {
+  const c = id ? loadCards().find((x) => x.id === id) : null;
+  const fmt = WRITE_AS[norm((c && c.format) || preset.format || "")] || (/^\d{13}$/.test(preset.number || "") ? "EAN13" : "Code128");
+  const color = (c && c.color) || CARD_COLORS[loadCards().length % CARD_COLORS.length];
+  const box = $("cardForm");
+  box.hidden = false;
+  box.innerHTML = `<form class="pform card" id="cfForm" autocomplete="off">
+      <div class="pt">${c ? "Edit card" : "New loyalty card"}</div>
+      <label>Name<input id="cfName" placeholder="Payback, Lidl Plus, DMart…" value="${esc(c ? c.name : preset.name || "")}" required></label>
+      <label>Card number<input id="cfNum" value="${esc(c ? c.number : preset.number || "")}" required></label>
+      <label>Barcode type<select id="cfFmt">${CARD_FORMATS.map(([v, l]) => `<option value="${v}"${v === fmt ? " selected" : ""}>${l}</option>`).join("")}</select></label>
+      ${preset.number && !c ? `<div class="muted small">Read from the card: ${esc(fmtName(preset.format))}. It'll be shown in the same type.</div>` : ""}
+      <div class="swatches">${CARD_COLORS.map((h) => `<button type="button" class="sw${h === color ? " on" : ""}" data-col="${h}" style="background:${h}" aria-label="Colour ${h}"></button>`).join("")}</div>
+      <div class="row"><button class="btn go" type="submit">Save card</button><button class="btn" type="button" id="cfCancel">Cancel</button>
+        ${c ? `<button class="btn del-btn" type="button" id="cfDel">Delete</button>` : ""}</div>
+    </form>`;
+  let col = color;
+  box.querySelectorAll("[data-col]").forEach((b) => b.onclick = () => { col = b.dataset.col; box.querySelectorAll(".sw").forEach((x) => x.classList.toggle("on", x === b)); });
+  $("cfCancel").onclick = () => { box.hidden = true; box.innerHTML = ""; };
+  if ($("cfDel")) $("cfDel").onclick = () => {
+    if (!confirm(`Delete the ${c.name} card from this phone?`)) return;
+    saveCards(loadCards().filter((x) => x.id !== c.id)); box.hidden = true; renderCards(); toast("Card deleted");
+  };
+  $("cfForm").onsubmit = (e) => {
+    e.preventDefault();
+    const name = $("cfName").value.trim(), number = $("cfNum").value.trim();
+    if (!name || !number) return;
+    const cards = loadCards();
+    const dupe = cards.find((x) => x.number === number && (!c || x.id !== c.id));
+    if (dupe) { toast("That number is already saved as " + dupe.name); return; }
+    if (c) Object.assign(cards.find((x) => x.id === c.id), { name, number, format: $("cfFmt").value, color: col });
+    else cards.push({ id: uid(), name, number, format: $("cfFmt").value, color: col, added: new Date().toISOString() });
+    saveCards(cards);
+    box.hidden = true; box.innerHTML = "";
+    renderCards();
+    toast(c ? "Card saved" : "Card added");
+  };
+  $("cfName").focus();
+  box.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* Full screen, white, as big as fits. A web page can't turn the screen
+   brightness up, so the card says so; it does keep the screen from dimming
+   (Wake Lock) while it's open. */
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && "wakeLock" in navigator && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => { wakeLock = null; });
+    } else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch { wakeLock = null; }
+}
+async function openCard(id) {
+  const c = loadCards().find((x) => x.id === id);
+  if (!c) return;
+  const dlg = $("cardShow");
+  $("csName").textContent = c.name;
+  $("csName").style.background = c.color; $("csName").style.color = cardInk(c.color);
+  $("csNum").textContent = c.number;
+  $("csCode").innerHTML = `<span class="spinner"></span>`;
+  $("csNote").textContent = "";
+  dlg.showModal();
+  keepAwake(true);
+  try {
+    const d = await drawBarcode(c.number, c.format);
+    $("csCode").innerHTML = d.svg;
+    $("csCode").className = d.is2d ? "cs-code sq" : "cs-code";
+    if (WRITE_AS[norm(c.format)] && d.used !== WRITE_AS[norm(c.format)]) $("csNote").textContent = "Shown as Code 128: this number doesn't fit " + fmtName(c.format) + ".";
+  } catch (e) {
+    $("csCode").innerHTML = `<div class="err">Couldn't draw the barcode (${esc(e.message)}). The number below can be typed in at the till.</div>`;
+  }
+}
+function closeCard() { $("cardShow").close(); }
+$("cardShow").addEventListener("close", () => keepAwake(false));
+$("cardShow").addEventListener("click", closeCard);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && $("cardShow").open) keepAwake(true); });
+$("cardScan").onclick = () => { captureCard = true; syncScanBanner(); showTab("scan"); if (!stream) startCamera(); };
+$("cardType").onclick = () => openCardForm(null);
+function syncScanBanner() {
+  $("captureBanner").hidden = !captureCard;
+  $("basketBar").hidden = captureCard || !basketOn();
+  if (basketOn()) renderBasketBar();
+}
+$("captureCancel").onclick = () => { captureCard = false; syncScanBanner(); };
+
+/* ---------- shopping basket ---------- */
+/* { on, cur, shop, budget (cents or null), items: [{ id, key, code, name, qty, cents (or null) }] }
+   The currency is fixed when the first item goes in, so a basket never mixes € and ₹. */
+const emptyBasket = () => ({ on: false, cur: homeCur(), shop: "", budget: null, items: [] });
+const loadBasket = () => store.get("basket", null) || emptyBasket();
+const saveBasket = (b) => store.set("basket", b);
+const basketOn = () => !!loadBasket().on;
+const basketCount = (b) => b.items.reduce((n, i) => n + i.qty, 0);
+const basketTotal = (b) => b.items.reduce((s, i) => s + (i.cents || 0) * i.qty, 0);
+function setBasketOn(on) {
+  const b = loadBasket();
+  if (on && !b.items.length) b.cur = homeCur();
+  b.on = on; saveBasket(b);
+  syncScanBanner(); renderBasket(); syncTabBadges();
+}
+function basketAddFromScan() {
+  const a = ctx.a;
+  if (!["product", "label", "book", "gs1", "store8"].includes(a.kind) || a.carton || !ctx.key) return;
+  const b = loadBasket();
+  if (!b.items.length) b.cur = homeCur();
+  let cents = null, key = ctx.key;
+  if (a.kind === "label") {
+    /* Every weighed pack is its own line with its own price. */
+    key = "label-pack:" + ctx.r.text;
+    if (a.label.sure && homeCur() === b.cur) cents = a.label.cents;
+  } else {
+    const p = latestPrice(ctx.key, b.cur);
+    cents = p ? p.cents : null;
+  }
+  const same = a.kind !== "label" && b.items.find((i) => i.key === key);
+  if (same) same.qty++;
+  else b.items.push({ id: uid(), key, priceKey: ctx.key, code: ctx.code, name: ctx.name, qty: 1, cents });
+  saveBasket(b);
+  renderBasketBar(); syncTabBadges();
+  const t = basketTotal(b);
+  toast(`${same ? "+1 " : "Added "}${ctx.name.slice(0, 28)}${cents !== null ? " · " + money(cents, b.cur) : " · no price yet"} · total ${money(t, b.cur)}`);
+  overBudgetCheck(b, t - (cents || 0));
+}
+function basketRename(key, name) {
+  const b = loadBasket();
+  let changed = false;
+  for (const i of b.items) if (i.priceKey === key && i.name !== name && !i.renamed) { i.name = name; changed = true; }
+  if (changed) { saveBasket(b); if (tab === "basket") renderBasket(); }
+}
+/* A gentle heads-up the moment the total goes past a budget, not on every scan after. */
+function overBudgetCheck(b, before) {
+  const total = basketTotal(b);
+  const limits = [];
+  if (b.budget) limits.push(["your basket budget", b.budget]);
+  const env = groceriesEnvelope(b.cur);
+  if (env) limits.push(["what's left in " + env.name, env.left]);
+  for (const [what, cap] of limits) if (before <= cap && total > cap) { toast(`Heads up: the basket is now over ${what} (${money(cap, b.cur)})`); break; }
+}
+function renderBasketBar() {
+  const b = loadBasket();
+  $("basketBar").innerHTML = `<span>🛒 <b>${basketCount(b)}</b> item${basketCount(b) === 1 ? "" : "s"} · <b>${money(basketTotal(b), b.cur)}</b></span>
+    <span><button class="btn small" id="bbOpen">Open basket</button><button class="btn small" id="bbStop">Stop</button></span>`;
+  $("bbOpen").onclick = () => showTab("basket");
+  $("bbStop").onclick = () => setBasketOn(false);
+}
+
+/* The expense tracker's Groceries envelope for this period, read-only, if its
+   book is readable here: same website, not encrypted, and in the shape this
+   code expects. Anything else and it's simply not shown. Mirrors the tracker:
+   periods run from the 15th to the 14th; a budget is an amount or a % of income
+   in its base categories; only finished expenses in that category count. */
+function groceriesEnvelope(cur) {
+  try {
+    if (cur !== "EUR") return null;                       /* the tracker keeps euros */
+    if (localStorage.getItem("panappai.v1.enc")) return null;
+    const raw = localStorage.getItem("panappai.v1");
+    if (!raw) return null;
+    const st = JSON.parse(raw);
+    if (!st || !Array.isArray(st.txns) || typeof st.budgets !== "object" || !st.budgets) return null;
+    const cat = "groceries_de";
+    if (st.catchAll === cat) return null;                 /* it also takes other spending; too much to mirror */
+    const iso = todayIso(), d = +iso.slice(8, 10), ym = iso.slice(0, 7);
+    const shift = (p, n) => { const [y, m] = p.split("-").map(Number); const t = new Date(y, m - 1 + n, 1); return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0"); };
+    const period = d >= 15 ? ym : shift(ym, -1);
+    const periodOf = (s) => typeof s === "string" && s.length >= 10 ? (+s.slice(8, 10) >= 15 ? s.slice(0, 7) : shift(s.slice(0, 7), -1)) : null;
+    const pct = st.budgetPct && st.budgetPct[cat] > 0 ? +st.budgetPct[cat] : 0;
+    let planned;
+    if (pct) {
+      const base = Array.isArray(st.budgetBase) && st.budgetBase.length ? st.budgetBase : ["salary"];
+      const income = st.txns.reduce((s, t) => t && t.type === "income" && periodOf(t.date) === period && base.includes(t.category) ? s + (+t.amount || 0) : s, 0);
+      planned = Math.round(income * pct / 100);
+    } else planned = +st.budgets[cat] || 0;
+    if (!(planned > 0)) return null;
+    const spent = st.txns.reduce((s, t) => t && t.type === "expense" && t.status === "done" && t.category === cat && periodOf(t.date) === period ? s + (+t.amount || 0) : s, 0);
+    const start = new Date(period + "-15T00:00:00"), end = new Date(shift(period, 1) + "-14T00:00:00");
+    const f = (x) => x.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+    return { name: "Groceries — German", planned, spent, left: planned - spent, range: f(start) + " – " + f(end) };
+  } catch { return null; }
+}
+
+function renderBasket() {
+  const b = loadBasket();
+  const total = basketTotal(b), count = basketCount(b), noPrice = b.items.filter((i) => i.cents === null).length;
+  const env = groceriesEnvelope(b.cur);
+  const budgetLine = (label, cap) => {
+    const left = cap - total;
+    return `<div class="bline ${left < 0 ? "over" : left < cap * 0.1 ? "near" : ""}">${label}: ${left >= 0 ? `<b>${money(left, b.cur)}</b> left` : `<b>${money(-left, b.cur)}</b> over`} of ${money(cap, b.cur)}</div>`;
+  };
+  $("basketBox").innerHTML = `
+    <div class="card btot">
+      <div class="row bmode"><label class="tick"><input type="checkbox" id="bOn"${b.on ? " checked" : ""}> Scan into basket</label>
+        <span class="muted small">${b.on ? "Each scan adds an item." : "Turn on, then scan at the shelf."}</span></div>
+      <div class="big">${money(total, b.cur)}</div>
+      <div class="muted">${count} item${count === 1 ? "" : "s"}${noPrice ? ` · <span class="warn-t">${noPrice} without a price</span>` : ""}${b.cur !== homeCur() && b.items.length ? ` · basket in ${b.cur}` : ""}</div>
+      ${b.budget ? budgetLine("Basket budget", b.budget) : ""}
+      ${env ? (() => {
+        const after = env.left - total;
+        return `<div class="bline ${after < 0 ? "over" : after < env.planned * 0.1 ? "near" : ""}">${esc(env.name)} in the expense tracker (${esc(env.range)}):
+          ${env.left >= 0 ? money(env.left, "EUR") + " left" : money(-env.left, "EUR") + " already over"} ·
+          <b>${after >= 0 ? money(after, "EUR") + " after this basket" : money(-after, "EUR") + " over after this basket"}</b></div>`;
+      })() : ""}
+    </div>
+    <div class="card pform">
+      <div class="prow">
+        <label class="grow"><span>Shop</span><input id="bShop" list="shopList2" placeholder="${country === "IN" ? "DMart…" : "REWE…"}" value="${esc(b.shop)}"></label>
+        <label class="size"><span>Budget</span><input id="bBudget" inputmode="decimal" placeholder="${CUR_SIGN[b.cur]} none" value="${b.budget ? plainAmount(b.budget, b.cur) : ""}"></label>
+      </div>
+      <datalist id="shopList2">${knownShops().map((s) => `<option value="${esc(s)}">`).join("")}</datalist>
+    </div>
+    <ul class="list" id="bItems">${b.items.length ? b.items.map((i) => `<li class="bi">
+        <div class="bn">${esc(i.name)}</div>
+        <div class="brow">
+          ${i.cents === null
+            ? `<input class="bprice" data-bprice="${i.id}" inputmode="decimal" placeholder="Price ${CUR_SIGN[b.cur]}" aria-label="Price for ${esc(i.name)}">`
+            : `<button class="lnk" data-bedit="${i.id}">${money(i.cents, b.cur)}</button>`}
+          <span class="qty"><button class="btn small" data-bminus="${i.id}" aria-label="One less">−</button><b>${i.qty}</b><button class="btn small" data-bplus="${i.id}" aria-label="One more">+</button></span>
+          <span class="bsum">${i.cents !== null ? money(i.cents * i.qty, b.cur) : "–"}</span>
+        </div></li>`).join("")
+      : `<li class="muted empty">The basket is empty. Turn on Scan into basket and scan items as you shop; each one is priced from your price book or its weighed-item label.</li>`}</ul>
+    ${b.items.length ? `<div class="row"><button class="btn go" id="bFinish">Finish</button><button class="btn" id="bClear">Clear basket</button></div>` : ""}
+    <div id="bFinishBox"></div>`;
+
+  $("bOn").onchange = (e) => { setBasketOn(e.target.checked); if (e.target.checked) { showTab("scan"); if (!stream) startCamera(); } };
+  $("bShop").onchange = (e) => { const x = loadBasket(); x.shop = e.target.value.trim().slice(0, 40); saveBasket(x); };
+  $("bBudget").onchange = (e) => { const x = loadBasket(); x.budget = e.target.value.trim() ? parsePrice(e.target.value) : null; saveBasket(x); renderBasket(); };
+  const upd = (id, fn) => { const x = loadBasket(); const it = x.items.find((i) => i.id === id); if (!it) return; const before = basketTotal(x); fn(x, it); x.items = x.items.filter((i) => i.qty > 0); saveBasket(x); renderBasket(); renderBasketBar(); syncTabBadges(); overBudgetCheck(x, before); };
+  $("basketBox").querySelectorAll("[data-bplus]").forEach((btn) => btn.onclick = () => upd(btn.dataset.bplus, (x, it) => it.qty++));
+  $("basketBox").querySelectorAll("[data-bminus]").forEach((btn) => btn.onclick = () => upd(btn.dataset.bminus, (x, it) => it.qty--));
+  $("basketBox").querySelectorAll("[data-bedit]").forEach((btn) => btn.onclick = () => upd(btn.dataset.bedit, (x, it) => { it.cents = null; }));
+  /* A typed price also goes into the price book, so the next scan of it is priced. */
+  $("basketBox").querySelectorAll("[data-bprice]").forEach((inp) => inp.onchange = () => {
+    const cents = parsePrice(inp.value);
+    if (cents === null) { toast("Enter a price, for example " + (b.cur === "INR" ? "129.50" : "1,29")); return; }
+    upd(inp.dataset.bprice, (x, it) => {
+      it.cents = cents;
+      if (it.priceKey && !it.key.startsWith("label-pack:")) {
+        const all = loadPrices(); (all[it.priceKey] = all[it.priceKey] || []).push({ id: uid(), cents, cur: x.cur, shop: x.shop || "", size: "", at: new Date().toISOString() }); savePrices(all);
+      }
+    });
+  });
+  if ($("bClear")) $("bClear").onclick = () => {
+    if (!confirm("Empty the basket? This can't be undone.")) return;
+    saveBasket({ ...emptyBasket(), on: loadBasket().on }); renderBasket(); renderBasketBar(); syncTabBadges(); toast("Basket emptied");
+  };
+  if ($("bFinish")) $("bFinish").onclick = openFinish;
+}
+function openFinish() {
+  const b = loadBasket(), total = basketTotal(b), count = basketCount(b);
+  const name = `Shopping${b.shop ? " at " + b.shop : ""} (${count} item${count === 1 ? "" : "s"})`;
+  const canLog = b.cur === "EUR" && total > 0;
+  $("bFinishBox").innerHTML = `<div class="card pform">
+      <div class="pt">Finish: ${esc(name)} · ${money(total, b.cur)}</div>
+      ${canLog ? `<label class="tick"><input type="checkbox" id="fLog" checked> Log ${money(total, "EUR")} as one expense in the expense tracker</label>`
+        : `<div class="muted small">${b.cur !== "EUR" ? "The expense tracker keeps euros, so a basket in " + b.cur + " isn't logged there." : "Nothing priced to log."}</div>`}
+      <label class="tick"><input type="checkbox" id="fHist" checked> Save the basket in History</label>
+      ${b.items.some((i) => i.cents === null) ? `<div class="muted small warn-t">Items without a price count as 0 in the total.</div>` : ""}
+      <div class="row"><button class="btn go" id="fDone">Done</button><button class="btn" id="fBack">Back</button></div>
+    </div>`;
+  $("fBack").onclick = () => { $("bFinishBox").innerHTML = ""; };
+  $("fDone").onclick = () => {
+    let logged = false;
+    if (canLog && $("fLog").checked) logged = sendToTracker({ kind: "expense", name, price: total, currency: "EUR", date: todayIso(), shop: b.shop || "", barcode: "" });
+    if ($("fHist").checked) {
+      const h = loadHist();
+      h.unshift({ id: uid(), at: new Date().toISOString(), kind: "basket", code: "", format: "Basket", name, total, cur: b.cur, shop: b.shop || "", items: b.items.map(({ name, qty, cents }) => ({ name, qty, cents })) });
+      store.set("history", h);
+    }
+    saveBasket({ ...emptyBasket(), on: false, shop: "" });
+    syncScanBanner(); renderBasket(); syncTabBadges();
+    toast(logged ? "Done. The expense appears the next time you open the expense tracker." : "Basket finished");
+  };
+  $("bFinishBox").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
 /* ---------- tabs ---------- */
 let tab = "scan", cameraWasOn = false;
 function showTab(t) {
@@ -1632,6 +2077,8 @@ function showTab(t) {
   if (t === "history") renderHistory();
   if (t === "pantry") renderPantry();
   if (t === "compare") renderCompare();
+  if (t === "basket") renderBasket();
+  if (t === "cards") renderCards();
   if (t === "scan" && cameraWasOn) startCamera();
   scrollTo(0, 0);
 }
@@ -1639,6 +2086,8 @@ function syncTabBadges() {
   const due = pantryDue(), cmp = store.get("compare", []).length;
   $("pantryBadge").textContent = due || ""; $("pantryBadge").hidden = !due;
   $("compareBadge").textContent = cmp || ""; $("compareBadge").hidden = !cmp;
+  const bc = basketCount(loadBasket());
+  $("basketBadge").textContent = bc || ""; $("basketBadge").hidden = !bc;
 }
 document.querySelectorAll("[data-tab]").forEach((b) => b.onclick = () => showTab(b.dataset.tab));
 $("histSearch").oninput = renderHistory;
@@ -1649,6 +2098,7 @@ $("histClear").onclick = () => {
 };
 syncTabBadges();
 renderDietSettings();
+syncScanBanner();
 
 /* ---------- start-up ---------- */
 if (!window.isSecureContext || !navigator.mediaDevices) {

@@ -6,6 +6,10 @@ release, and shown in the app under **About → What's new**.
 Each line is tagged `fix:`, `new:` or `better:`, which the app shows as a label
 beside it.
 
+## 1.1.6 — 2026-11-13
+- new: Loyalty cards: a Cards tab to scan or type your Payback, DeutschlandCard, Lidl Plus, DMart and other cards, with a name and colour. Tap one to show its barcode full screen, in the same type it was scanned in, and the screen stays on. Scanning a saved card never looks it up as a product.
+- new: Shopping basket: turn on Scan into basket and each scan adds the item with its price from the price book or weighed label (or type it). Quantities, a big running total, an optional budget, and the expense tracker's Groceries budget left this period. Finish logs it as one expense and saves it in History.
+
 ## 1.1.5 — 2026-11-12
 - new: Send to the expense tracker: after a scan, Add to shopping list (German or Indian stores) or Log as expense. It appears the next time you open the expense tracker in Chrome.
 - new: Health and diet: Nutri-Score, sugar, fat and salt levels, allergens and vegetarian/vegan for food. Set your own warnings under About; a product that matches turns red.
