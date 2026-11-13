@@ -54,6 +54,34 @@ Single `index.html`, no build step, works offline once opened (except product lo
   browser storage the two apps share on priyasureshgermany.github.io. The expense tracker picks
   it up the next time it opens. On iPhone this needs both apps open in Chrome: each Home Screen
   web app gets its own separate storage.
+- **Loyalty cards (Cards tab):** scan or type Payback, DeutschlandCard, Lidl Plus, REWE, dm,
+  DMart, Reliance and other cards, with a name and colour; edit, reorder, delete. Tapping one
+  shows its barcode full screen on white, redrawn in the format it was scanned in (by the
+  vendored zxing-wasm writer, `vendor/zxing-writer.js` + `zxing_writer.wasm`, same MIT licence),
+  with the number below. The screen is kept on while it's open (Wake Lock); web pages can't raise
+  the brightness, so the app says to turn it up. A scanned card that's saved here is recognised
+  and never looked up as a product.
+- **Shopping basket (Basket tab):** with Scan into basket on, every scan adds the item at its
+  price-book or weighed-label price (or one typed in, which also goes into the price book).
+  Quantities, a big running total, an optional basket budget, and, when the expense tracker's
+  book is readable (not encrypted), its Groceries — German budget left this period (15th to
+  14th), read only. A gentle warning when the total passes a budget. Finish logs the basket as
+  one euro expense through `panappai.inbox` and saves it in History.
+- **Still to get:** the Basket shows the expense tracker's shopping list for the current
+  country (German or Indian stores), read only from `panappai.v1`. Items tick off when a scanned
+  product's name matches (loose word match ignoring case, accents and ä/ae spellings) or by tap.
+  Ticks belong to the basket and reset with it; the tracker's list is never changed. With an
+  encrypted book the app says to open the tracker unencrypted to see the list.
+- **Bills:** German GiroCode / EPC QR codes show payee, IBAN (grouped, checked, copyable),
+  amount and reference, and can be added to the expense tracker as a bill with a due date
+  (it files a future date as planned). Indian UPI QR codes show payee, UPI ID, amount and note;
+  they aren't sent to the tracker, which keeps euros. The app never pays anything.
+- **Wi-Fi QR codes:** network name, security and password (hidden until tapped), with copy
+  buttons. Web apps can't join a network, so: copy the password, then pick the network in
+  Settings. The password is masked in History and its CSV.
+- **Parcels:** DHL (JJD…, 00340…, 12 and 20 digits), Hermes, DPD (including its 28-character
+  label code), GLS, UPS (1Z…), India Post (XX123456789IN) and other postal numbers get
+  "Track with …" buttons, one per carrier when a number could be several. No product lookup.
 - “Scan a photo” reads a code from a photo or screenshot, for when the camera can't be used.
 - QR codes that are web links get an “Open link” button. Links never open by themselves.
 

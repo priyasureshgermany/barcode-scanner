@@ -253,6 +253,14 @@
   .basket-h summary { list-style: none; display: grid; gap: 2px; cursor: pointer; }
   .bh-items { list-style: none; padding: 8px 0 0; margin: 0; display: grid; gap: 4px; font-size: 13px; }
   .bh-items li { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  .slist { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; }
+  .sl { width: 100%; display: flex; gap: 10px; align-items: center; background: none; border: 0; color: var(--text);
+    padding: 6px 2px; font-size: 15px; text-align: left; cursor: pointer; }
+  .sl .box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line); display: inline-flex;
+    align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex: none; }
+  .sl.on .box { background: var(--hit); border-color: var(--hit); color: #06210f; }
+  .sl.on .sn { text-decoration: line-through; color: var(--muted); }
   .label .lt, .info .lt { font-size: 13px; color: var(--muted); font-weight: 600; }
   .origin { color: var(--muted); font-size: 12px; margin-top: 2px; }
   .info dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 10px 0 4px; font-size: 14px; }
@@ -400,7 +408,7 @@
 <script>
 "use strict";
 /* Both written by tools/bump-version.mjs; don't edit by hand. */
-const APP_VERSION = "1.1.6";
+const APP_VERSION = "1.1.7";
 const APP_BUILT = "2026-11-13";
 document.getElementById("ver").textContent = APP_VERSION;
 
@@ -842,7 +850,7 @@ function fromAis(f, title) {
   /* Expiry + batch + serial is the medicine pattern (India's export rules, the EU's
      FMD). Medicines aren't in the food and product databases, so no lookup. */
   else if (f["17"] && f["21"] && f["10"]) { a.title = "Medicine pack"; a.medicine = true; }
-  if (f["00"]) a.title = "Shipping label (GS1-128)";
+  if (f["00"]) { a.title = "Shipping label (GS1-128)"; a.shipping = true; const p = parcelCarriers("00" + f["00"]); if (p && p.carriers[0] === "dhl" && f["00"].startsWith("340")) a.track = p; }
   return a;
 }
 /* securPharm's other layout (IFA, ISO/IEC 15434 format 06): data identifiers
@@ -875,6 +883,8 @@ function analyze(r) {
   /* One of your own loyalty cards: show it, and never look it up as a product. */
   const card = findCard(t);
   if (card) return { kind: "card", card };
+  const special = analyzeSpecial(t, f);
+  if (special) return special;
   if (/^https?:\/\/\S+$/i.test(t.trim())) {
     const dl = parseDigitalLink(t.trim());
     if (!dl) return { kind: "url", url: t.trim() };
@@ -928,7 +938,8 @@ function showResult(r, others, opts = {}) {
   a.origin = a.gtin ? gs1Origin(a.gtin) : null;
   a.compare = a.pzn ? "PZN " + a.pzn : a.gtin && a.kind !== "issn" ? a.gtin : null;
   const lookupKind = a.kind === "book" ? "book" : a.gtin && a.kind !== "issn" && !a.pzn && !a.medicine ? (/^97[89]/.test(a.gtin) ? "book" : "product") : null;
-  const priceKey = a.kind === "card" ? null : a.kind === "label" ? a.label.key : a.pzn ? "pzn:" + a.pzn : a.gtin || a.g14 || (isUrl ? null : text);
+  const NOT_ITEMS = ["card", "epc", "upi", "wifi", "parcel"];
+  const priceKey = NOT_ITEMS.includes(a.kind) || a.shipping ? null : a.kind === "label" ? a.label.key : a.pzn ? "pzn:" + a.pzn : a.gtin || a.g14 || (isUrl ? null : text);
   const searchFor = a.pzn ? "PZN " + a.pzn : a.gtin || a.g14 || text;
   const shownText = a.kind === "gs1" && !a.url ? text.replace(/[␞␝␄]/g, " ").trim() : text;
   editingPrice = false;
@@ -943,7 +954,7 @@ function showResult(r, others, opts = {}) {
     <div class="row">
       <button class="btn" id="copyBtn">Copy</button>
       ${isUrl ? `<a class="btn go" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">Open link</a>` : ""}
-      ${!isUrl && a.kind !== "card" ? `<a class="btn" id="searchBtn" href="${esc(webSearch(searchFor))}" target="_blank" rel="noopener noreferrer">Search the web</a>` : ""}
+      ${!isUrl && !NOT_ITEMS.includes(a.kind) ? `<a class="btn" id="searchBtn" href="${esc(webSearch(searchFor))}" target="_blank" rel="noopener noreferrer">Search the web</a>` : ""}
       ${compareButtons(a)}
     </div>`;
   if (others && others.length) {
@@ -955,6 +966,8 @@ function showResult(r, others, opts = {}) {
   if (a.kind === "gs1") html += infoCard(a);
   if (a.kind === "issn") html += `<div class="card muted">A magazine or newspaper code (ISSN). These aren't in the product databases; the last digits usually change with each issue.</div>`;
   if (a.kind === "card") html += `<div class="card lc-hit" style="--lc:${esc(a.card.color)}"><div class="lt">Your loyalty card</div><div class="lc-name">${esc(a.card.name)}</div><div class="muted small">${basketOn() ? "Loyalty cards aren't added to the basket. " : ""}No product lookup for your own cards.</div><div class="row"><button class="btn go" id="showCardBtn">Show card</button></div></div>`;
+  html += specialCard(a);
+  if (a.track) html += specialCard({ kind: "parcel", ...a.track });
   if (a.kind === "store8") html += `<div class="card muted">A short code a shop made for its own use, so it can't be looked up.</div>`;
   if (lookupKind) html += `<div class="card" id="lookup"><span class="spinner"></span><span class="muted">${lookupKind === "book" ? "Looking up book…" : "Looking up product…"}</span></div>`;
   if (priceKey) html += `<div class="card" id="prices"></div><div class="card" id="acts"></div>`;
@@ -967,6 +980,7 @@ function showResult(r, others, opts = {}) {
     renderPrices(priceKey, null, a.label.cents);
     $("prices").scrollIntoView({ behavior: "smooth", block: "center" });
   };
+  wireSpecial(a);
   if ($("showCardBtn")) $("showCardBtn").onclick = () => openCard(a.card.id);
   $("copyBtn").onclick = async () => {
     try { await navigator.clipboard.writeText(text); toast("Copied"); }
@@ -979,6 +993,10 @@ function showResult(r, others, opts = {}) {
   else if (lookupKind === "product") lookup(a.gtin).then((res) => { if (current === r) renderLookup(res, a); });
 }
 function defaultName(a, text) {
+  if (a.kind === "epc") return "Bill: " + a.name + (a.cents !== null ? " " + (a.cents / 100).toFixed(2) + " €" : "");
+  if (a.kind === "upi") return "UPI: " + (a.pn || a.pa);
+  if (a.kind === "wifi") return "Wi-Fi: " + a.ssid;
+  if (a.kind === "parcel") return "Parcel " + a.number;
   if (a.kind === "label") return "Weighed item " + a.label.item;
   if (a.pzn) return "Medicine, PZN " + a.pzn;
   if (a.kind === "gs1" && a.title) return a.title + (a.gtin ? " " + a.gtin : "");
@@ -1557,11 +1575,13 @@ function openPantryForm() {
 const loadHist = () => store.get("history", []);
 function recordHistory(c) {
   const h = loadHist(), now = new Date().toISOString(), r = c.r;
+  /* A Wi-Fi password is not kept in history (or its CSV). */
+  const code = c.a.kind === "wifi" ? maskWifi(r.text) : r.text;
   /* The camera sees the same code many times; one entry per two minutes is enough. */
-  if (h[0] && h[0].code === r.text && Date.now() - Date.parse(h[0].at) < 120000) {
+  if (h[0] && h[0].code === code && Date.now() - Date.parse(h[0].at) < 120000) {
     h[0].at = now; store.set("history", h); return h[0].id;
   }
-  const e = { id: uid(), at: now, code: r.text, format: r.format, name: c.name, key: c.key, ct: r.contentType || "", sym: r.symbologyIdentifier || "" };
+  const e = { id: uid(), at: now, code, format: r.format, name: c.name, key: c.key, ct: r.contentType || "", sym: r.symbologyIdentifier || "" };
   h.unshift(e);
   if (h.length > 1000) h.length = 1000;
   store.set("history", h);
@@ -1715,6 +1735,182 @@ function renderCompare() {
     const l = store.get("compare", []); l.splice(+b.dataset.cdel, 1); store.set("compare", l);
     renderCompare(); syncTabBadges(); if (ctx && $("acts")) renderActs();
   });
+}
+
+/* ---------- bills, Wi-Fi and parcels ---------- */
+/* QR codes and labels that aren't products. None of them is looked up, priced
+   or searched for on the web, since they carry personal details. */
+
+/* GiroCode / EPC QR (European Payments Council): one field per line.
+   BCD, version, charset, SCT, BIC, name, IBAN, EUR amount, purpose, reference, text. */
+function parseEpc(t) {
+  const L = t.replace(/\r\n?/g, "\n").split("\n");
+  if (L[0] !== "BCD" || L[3] !== "SCT" || !L[5] || !L[6]) return null;
+  const iban = L[6].replace(/\s+/g, "").toUpperCase();
+  const am = (L[7] || "").match(/^EUR(\d+(?:\.\d{1,2})?)$/);
+  return { kind: "epc", bic: (L[4] || "").trim(), name: L[5].trim(), iban, cents: am ? Math.round(+am[1] * 100) : null,
+    purpose: (L[8] || "").trim(), ref: (L[9] || "").trim(), text: (L[10] || "").trim(), ibanOk: ibanValid(iban) };
+}
+/* ISO 13616: move the first four characters to the end, letters to numbers, mod 97 = 1. */
+function ibanValid(iban) {
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(iban)) return false;
+  const s = (iban.slice(4) + iban.slice(0, 4)).replace(/[A-Z]/g, (c) => c.charCodeAt(0) - 55);
+  let r = 0;
+  for (const ch of s) r = (r * 10 + +ch) % 97;
+  return r === 1;
+}
+const ibanGroups = (i) => i.replace(/(.{4})/g, "$1 ").trim();
+
+/* UPI: upi://pay?pa=<id>&pn=<name>&am=<amount>&cu=INR&tn=<note> */
+function parseUpi(t) {
+  if (!/^upi:\/\/pay\?/i.test(t.trim())) return null;
+  const q = new URLSearchParams(t.trim().replace(/^upi:\/\/pay\?/i, ""));
+  const pa = q.get("pa");
+  if (!pa) return null;
+  const am = q.get("am");
+  return { kind: "upi", pa, pn: q.get("pn") || "", cents: am && !isNaN(+am) ? Math.round(+am * 100) : null, cu: (q.get("cu") || "INR").toUpperCase(), tn: q.get("tn") || "" };
+}
+
+/* WIFI:T:WPA;S:<ssid>;P:<password>;H:true;;  with \; \, \: \\ escaped. */
+function parseWifi(t) {
+  if (!/^WIFI:/i.test(t)) return null;
+  const f = {};
+  let key = "", val = "", inVal = false;
+  const body = t.slice(5);
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i];
+    if (c === "\\" && i + 1 < body.length) { (inVal ? (val += body[++i]) : (key += body[++i])); continue; }
+    if (!inVal && c === ":") { inVal = true; continue; }
+    if (c === ";") { if (key) f[key.toUpperCase()] = val; key = ""; val = ""; inVal = false; continue; }
+    inVal ? (val += c) : (key += c);
+  }
+  if (key) f[key.toUpperCase()] = val;
+  if (!("S" in f)) return null;
+  const sec = (f.T || "").toUpperCase();
+  return { kind: "wifi", ssid: f.S, pass: f.P || "", sec: sec === "NOPASS" || (!sec && !f.P) ? "Open (no password)" : sec === "WEP" ? "WEP" : sec === "SAE" ? "WPA3" : "WPA/WPA2", hidden: /^true$/i.test(f.H || "") };
+}
+const maskWifi = (t) => t.replace(/(;|^WIFI:)P:((?:\\.|[^;])*)/i, "$1P:•••");
+
+/* Parcel tracking numbers. Several carriers share number shapes, so an
+   ambiguous number gets a button for each that might fit. */
+const CARRIERS = {
+  dhl: { name: "DHL", url: (n) => "https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode=" + enc(n) },
+  hermes: { name: "Hermes", url: (n) => "https://www.myhermes.de/empfangen/sendungsverfolgung/sendungsinformation/#" + enc(n) },
+  dpd: { name: "DPD", url: (n) => "https://tracking.dpd.de/status/de_DE/parcel/" + enc(n) },
+  gls: { name: "GLS", url: (n) => "https://gls-group.com/DE/de/paketverfolgung?match=" + enc(n) },
+  ups: { name: "UPS", url: (n) => "https://www.ups.com/track?loc=de_DE&tracknum=" + enc(n) },
+  indiapost: { name: "India Post", url: () => "https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx" },
+  any: { name: "17TRACK (any carrier)", url: (n) => "https://t.17track.net/en#nums=" + enc(n) }
+};
+function parcelCarriers(raw) {
+  let n = String(raw).replace(/\s+/g, "").toUpperCase();
+  const dpd = n.match(/^%[0-9A-Z]{7}(\d{14})\d{6}$/);        /* DPD label: %, postcode, parcel no., service, country */
+  if (dpd) return { number: dpd[1], carriers: ["dpd"] };
+  if (/^1Z[0-9A-Z]{16}$/.test(n)) return { number: n, carriers: ["ups"] };
+  if (/^JJD\d{10,22}$/.test(n)) return { number: n, carriers: ["dhl"] };
+  if (/^[A-Z]{2}\d{9}IN$/.test(n)) return { number: n, carriers: ["indiapost", "any"] };
+  if (/^[A-Z]{2}\d{9}DE$/.test(n)) return { number: n, carriers: ["dhl", "any"] };
+  if (/^[A-Z]{2}\d{9}[A-Z]{2}$/.test(n)) return { number: n, carriers: ["any"] };   /* other postal services (UPU) */
+  if (/^00340\d{15}$/.test(n)) return { number: n, carriers: ["dhl"] };
+  if (/^\d{20}$/.test(n)) return { number: n, carriers: ["dhl", "any"] };
+  if (/^\d{16}$/.test(n)) return { number: n, carriers: ["hermes", "any"] };
+  if (/^\d{14}$/.test(n)) return { number: n, carriers: ["dpd", "hermes"] };
+  if (/^\d{12}$/.test(n)) return { number: n, carriers: ["dhl", "gls"] };
+  if (/^\d{11}$/.test(n)) return { number: n, carriers: ["gls", "any"] };
+  return null;
+}
+/* Only codes on labels, never a product barcode (EAN, UPC, ITF-14 cartons). */
+const PARCEL_FORMATS = new Set(["CODE128", "CODE39", "CODE93", "QRCODE", "DATAMATRIX", "PDF417", "AZTEC", "TYPED"]);
+
+function analyzeSpecial(t, f) {
+  const s = t.trim();
+  return parseEpc(t) || parseUpi(s) || parseWifi(s) ||
+    (PARCEL_FORMATS.has(f) && (() => { const p = parcelCarriers(s); return p ? { kind: "parcel", ...p } : null; })()) || null;
+}
+const copyBtn = (id, value, label) => `<button class="btn small" data-copy="${esc(value)}" id="${id}">${label}</button>`;
+function specialCard(a) {
+  if (a.kind === "epc") {
+    const what = [a.ref, a.text].filter(Boolean).join(" · ");
+    return `<div class="card info">
+      <div class="lt">Bank transfer (GiroCode)</div>
+      <dl>
+        <dt>Payee</dt><dd>${esc(a.name)}</dd>
+        <dt>IBAN</dt><dd class="mono">${esc(ibanGroups(a.iban))}${a.ibanOk ? "" : ` <span class="exp bad">check digits wrong</span>`}</dd>
+        ${a.bic ? `<dt>BIC</dt><dd class="mono">${esc(a.bic)}</dd>` : ""}
+        <dt>Amount</dt><dd>${a.cents !== null ? money(a.cents, "EUR") : "not given"}</dd>
+        ${a.ref ? `<dt>Reference</dt><dd>${esc(a.ref)}</dd>` : ""}
+        ${a.text ? `<dt>Text</dt><dd>${esc(a.text)}</dd>` : ""}
+      </dl>
+      <div class="row">${copyBtn("cpIban", a.iban, "Copy IBAN")}${a.cents !== null ? copyBtn("cpAmt", (a.cents / 100).toFixed(2).replace(".", ","), "Copy amount") : ""}${what ? copyBtn("cpRef", what, "Copy reference") : ""}</div>
+      <div class="sub">Expense tracker</div>
+      <form class="pform" id="billForm">
+        <div class="prow">
+          <label class="grow">Due date<input type="date" id="billDue" value="${isoOf(new Date(Date.now() + 14 * 86400000))}" required></label>
+          ${a.cents === null ? `<label class="size">Amount €<input id="billAmt" inputmode="decimal" placeholder="12,30" required></label>` : ""}
+        </div>
+        <div class="row"><button class="btn go" type="submit" id="billAdd">Add to expense tracker as a bill</button></div>
+      </form>
+      <div class="muted small">This app never pays anything. Pay it in your banking app; many can scan this same code.</div>
+    </div>`;
+  }
+  if (a.kind === "upi") {
+    return `<div class="card info">
+      <div class="lt">UPI payment request</div>
+      <dl>
+        ${a.pn ? `<dt>Payee</dt><dd>${esc(a.pn)}</dd>` : ""}
+        <dt>UPI ID</dt><dd class="mono">${esc(a.pa)}</dd>
+        <dt>Amount</dt><dd>${a.cents !== null ? money(a.cents, a.cu === "INR" ? "INR" : a.cu) : "not given"}</dd>
+        ${a.tn ? `<dt>Note</dt><dd>${esc(a.tn)}</dd>` : ""}
+      </dl>
+      <div class="row">${copyBtn("cpUpi", a.pa, "Copy UPI ID")}${a.cents !== null ? copyBtn("cpAmt", (a.cents / 100).toFixed(2), "Copy amount") : ""}</div>
+      <div class="muted small">Not sent to the expense tracker, which keeps euros only. This app never pays anything; pay in your UPI app.</div>
+    </div>`;
+  }
+  if (a.kind === "wifi") {
+    return `<div class="card info">
+      <div class="lt">Wi-Fi network</div>
+      <dl>
+        <dt>Network</dt><dd>${esc(a.ssid)}${a.hidden ? ` <span class="muted small">(hidden network)</span>` : ""}</dd>
+        <dt>Security</dt><dd>${esc(a.sec)}</dd>
+        ${a.pass ? `<dt>Password</dt><dd><button class="lnk mono" id="wifiPass" data-pass="${esc(a.pass)}">•••••••• tap to show</button></dd>` : ""}
+      </dl>
+      <div class="row">${copyBtn("cpSsid", a.ssid, "Copy network name")}${a.pass ? copyBtn("cpPass", a.pass, "Copy password") : ""}</div>
+      <div class="muted small">A web app can't join a network by itself. Copy the password, then pick ${esc(a.ssid)} in Settings → Wi-Fi.</div>
+    </div>`;
+  }
+  if (a.kind === "parcel") {
+    return `<div class="card info">
+      <div class="lt">Parcel tracking number</div>
+      <div class="code long mono">${esc(a.number)}</div>
+      ${a.carriers.length > 1 ? `<div class="muted small">More than one carrier uses numbers like this; try each.</div>` : ""}
+      <div class="row">${a.carriers.map((c) => `<a class="btn${c === a.carriers[0] ? " go" : ""}" href="${esc(CARRIERS[c].url(a.number))}" target="_blank" rel="noopener noreferrer">Track with ${esc(CARRIERS[c].name)}</a>`).join("")}
+        ${copyBtn("cpParcel", a.number, "Copy number")}</div>
+      ${a.carriers.includes("indiapost") ? `<div class="muted small">India Post's page doesn't take the number from a link: copy it and paste it there.</div>` : ""}
+    </div>`;
+  }
+  return "";
+}
+function wireSpecial(a) {
+  out.querySelectorAll("[data-copy]").forEach((b) => b.onclick = async () => {
+    try { await navigator.clipboard.writeText(b.dataset.copy); toast("Copied"); } catch { toast("Copy failed"); }
+  });
+  if ($("wifiPass")) $("wifiPass").onclick = (e) => {
+    const b = e.currentTarget, shown = b.dataset.shown === "1";
+    b.textContent = shown ? "•••••••• tap to show" : b.dataset.pass;
+    b.dataset.shown = shown ? "" : "1";
+  };
+  if ($("billForm")) $("billForm").onsubmit = (e) => {
+    e.preventDefault();
+    const cents = a.cents !== null ? a.cents : parsePrice($("billAmt").value);
+    if (!cents) { toast("Enter the amount"); return; }
+    const due = $("billDue").value;
+    if (!due) return;
+    const what = a.ref || a.text || a.purpose || "bill";
+    if (sendToTracker({ kind: "expense", name: `${a.name} — ${what}`, price: cents, currency: "EUR", date: due, shop: a.name, barcode: "" })) {
+      $("billAdd").disabled = true; $("billAdd").textContent = "Added as a bill ✓";
+      toast("Added. It appears in the expense tracker, due " + fmtDay(due) + ".");
+    }
+  };
 }
 
 /* ---------- where a scan goes ---------- */
@@ -1880,7 +2076,42 @@ $("captureCancel").onclick = () => { captureCard = false; syncScanBanner(); };
 /* ---------- shopping basket ---------- */
 /* { on, cur, shop, budget (cents or null), items: [{ id, key, code, name, qty, cents (or null) }] }
    The currency is fixed when the first item goes in, so a basket never mixes € and ₹. */
-const emptyBasket = () => ({ on: false, cur: homeCur(), shop: "", budget: null, items: [] });
+const emptyBasket = () => ({ on: false, cur: homeCur(), shop: "", budget: null, items: [], ticks: [] });
+
+/* ---------- the expense tracker's shopping list ---------- */
+/* Read-only from its book in the shared browser storage. Ticks live in the
+   basket (one shopping trip) and are never written back into the tracker. */
+function trackerList(code) {
+  try {
+    if (localStorage.getItem("panappai.v1.enc")) return { locked: true };
+    const raw = localStorage.getItem("panappai.v1");
+    if (!raw) return null;
+    const st = JSON.parse(raw);
+    const l = st && st.shop && st.shop.lists && st.shop.lists[code];
+    if (!Array.isArray(l)) return null;
+    return { items: l.filter((i) => i && typeof i.name === "string" && i.id !== undefined && !i.done) };
+  } catch { return null; }
+}
+/* Loose match: every word of the list item (3+ letters) is found at the start
+   of a word in the product's name, either way round, ignoring case and accents.
+   "Milch" ticks "Weihenstephan H-Milch", "Tomatoes" ticks "Tomato Ketchup". */
+const words = (s) => String(s).toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+  .normalize("NFD").replace(/[̀-ͯ]/g, "").split(/[^a-z0-9ऀ-ॿ]+/).filter((w) => w.length >= 3);
+function nameMatches(listName, productName) {
+  const lw = words(listName), pw = words(productName);
+  if (!lw.length || !pw.length) return false;
+  return lw.every((w) => pw.some((p) => p.startsWith(w) || (p.length >= 4 && w.startsWith(p))));
+}
+function autoTick(productName) {
+  const b = loadBasket(), list = trackerList(country === "IN" ? "in" : "de");
+  if (!list || list.locked) return;
+  b.ticks = b.ticks || [];
+  const hit = list.items.find((i) => !b.ticks.includes(String(i.id)) && nameMatches(i.name, productName));
+  if (!hit) return;
+  b.ticks.push(String(hit.id)); saveBasket(b);
+  toast("Ticked off the list: " + hit.name);
+  if (tab === "basket") renderBasket();
+}
 const loadBasket = () => store.get("basket", null) || emptyBasket();
 const saveBasket = (b) => store.set("basket", b);
 const basketOn = () => !!loadBasket().on;
@@ -1911,6 +2142,7 @@ function basketAddFromScan() {
   else b.items.push({ id: uid(), key, priceKey: ctx.key, code: ctx.code, name: ctx.name, qty: 1, cents });
   saveBasket(b);
   renderBasketBar(); syncTabBadges();
+  if (!/^d+$/.test(ctx.name)) autoTick(ctx.name);
   const t = basketTotal(b);
   toast(`${same ? "+1 " : "Added "}${ctx.name.slice(0, 28)}${cents !== null ? " · " + money(cents, b.cur) : " · no price yet"} · total ${money(t, b.cur)}`);
   overBudgetCheck(b, t - (cents || 0));
@@ -1919,7 +2151,7 @@ function basketRename(key, name) {
   const b = loadBasket();
   let changed = false;
   for (const i of b.items) if (i.priceKey === key && i.name !== name && !i.renamed) { i.name = name; changed = true; }
-  if (changed) { saveBasket(b); if (tab === "basket") renderBasket(); }
+  if (changed) { saveBasket(b); if (tab === "basket") renderBasket(); autoTick(name); }
 }
 /* A gentle heads-up the moment the total goes past a budget, not on every scan after. */
 function overBudgetCheck(b, before) {
@@ -1972,6 +2204,22 @@ function groceriesEnvelope(cur) {
   } catch { return null; }
 }
 
+function listCard(b) {
+  const code = country === "IN" ? "in" : "de", label = code === "in" ? "Indian stores" : "German stores";
+  const l = trackerList(code);
+  if (!l) return "";
+  if (l.locked) return `<div class="card muted small">Open the expense tracker unencrypted to see its shopping list here.</div>`;
+  if (!l.items.length) return "";
+  const ticks = b.ticks || [];
+  const left = l.items.filter((i) => !ticks.includes(String(i.id)));
+  const got = l.items.filter((i) => ticks.includes(String(i.id)));
+  const li = (i, on) => `<li><button class="sl${on ? " on" : ""}" data-tick="${esc(String(i.id))}"><span class="box">${on ? "✓" : ""}</span><span class="sn">${esc(i.name)}${i.qty && +i.qty > 1 ? " × " + esc(i.qty) : ""}</span></button></li>`;
+  return `<div class="card">
+    <div class="ph"><span class="pt">Still to get</span><span class="muted small">${got.length} of ${l.items.length} · ${label}</span></div>
+    <ul class="slist">${left.map((i) => li(i, false)).join("")}${got.map((i) => li(i, true)).join("")}</ul>
+    <div class="muted small">From the expense tracker's list. Ticks happen here when a scan matches, or tap; the list in the tracker isn't changed.</div>
+  </div>`;
+}
 function renderBasket() {
   const b = loadBasket();
   const total = basketTotal(b), count = basketCount(b), noPrice = b.items.filter((i) => i.cents === null).length;
@@ -2001,6 +2249,7 @@ function renderBasket() {
       </div>
       <datalist id="shopList2">${knownShops().map((s) => `<option value="${esc(s)}">`).join("")}</datalist>
     </div>
+    ${listCard(b)}
     <ul class="list" id="bItems">${b.items.length ? b.items.map((i) => `<li class="bi">
         <div class="bn">${esc(i.name)}</div>
         <div class="brow">
@@ -2031,6 +2280,12 @@ function renderBasket() {
         const all = loadPrices(); (all[it.priceKey] = all[it.priceKey] || []).push({ id: uid(), cents, cur: x.cur, shop: x.shop || "", size: "", at: new Date().toISOString() }); savePrices(all);
       }
     });
+  });
+  $("basketBox").querySelectorAll("[data-tick]").forEach((el) => el.onclick = () => {
+    const x = loadBasket(); x.ticks = x.ticks || [];
+    const id = el.dataset.tick;
+    x.ticks = x.ticks.includes(id) ? x.ticks.filter((t) => t !== id) : [...x.ticks, id];
+    saveBasket(x); renderBasket();
   });
   if ($("bClear")) $("bClear").onclick = () => {
     if (!confirm("Empty the basket? This can't be undone.")) return;

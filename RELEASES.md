@@ -6,6 +6,12 @@ release, and shown in the app under **About → What's new**.
 Each line is tagged `fix:`, `new:` or `better:`, which the app shows as a label
 beside it.
 
+## 1.1.7 — 2026-11-13
+- new: Bills: German GiroCode QR codes show the payee, IBAN, amount and reference, and can be added to the expense tracker as a bill with a due date. Indian UPI QR codes show the payee, UPI ID and amount. The app never pays anything.
+- new: Shopping list: the Basket shows the expense tracker's list (German or Indian stores) as Still to get, and ticks items off when you scan a match or tap them. The tracker's list itself isn't changed.
+- new: Parcels: DHL, Hermes, DPD, GLS, UPS and India Post tracking numbers get Track buttons for the carrier's page.
+- new: Wi-Fi QR codes show the network, security and password (tap to show), with copy buttons.
+
 ## 1.1.6 — 2026-11-13
 - new: Loyalty cards: a Cards tab to scan or type your Payback, DeutschlandCard, Lidl Plus, DMart and other cards, with a name and colour. Tap one to show its barcode full screen, in the same type it was scanned in, and the screen stays on. Scanning a saved card never looks it up as a product.
 - new: Shopping basket: turn on Scan into basket and each scan adds the item with its price from the price book or weighed label (or type it). Quantities, a big running total, an optional budget, and the expense tracker's Groceries budget left this period. Finish logs it as one expense and saves it in History.
